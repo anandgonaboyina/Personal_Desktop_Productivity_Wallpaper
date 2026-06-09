@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# persisted dashboard store (machine-specific, do not commit)
+/data/

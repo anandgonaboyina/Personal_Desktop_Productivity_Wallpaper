@@ -24,3 +24,33 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20;
+  }
+}
+
+/* Custom Webkit Scrollbar for CEF / Live Wallpaper Engine */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  pointer-events: auto;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.overflow-y-auto {
+  scrollbar-gutter: stable;
+}
