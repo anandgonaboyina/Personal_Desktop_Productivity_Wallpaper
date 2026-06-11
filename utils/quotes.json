@@ -314,5 +314,245 @@
     {
         "text": "We cannot always build the future for our youth, but we can build our youth for the future.",
         "author": "Frank"
+    },
+    {
+        "text": "We suffer more often in imagination than in reality.",
+        "author": "Seneca"
+    },
+    {
+        "text": "He who has a why to live for can bear almost any how.",
+        "author": "Friedrich Nietzsche"
+    },
+    {
+        "text": "Doubt kills more dreams than failure ever will.",
+        "author": "Suzy Kassem"
+    },
+    {
+        "text": "Don’t judge each day by the harvest you reap but by the seeds that you plant.",
+        "author": "Robert Louis Stevenson"
+    },
+    {
+        "text": "The only way to do great work is to love what you do.",
+        "author": "Steve Jobs"
+    },
+    {
+        "text": "You miss 100% of the shots you don’t take.",
+        "author": "Wayne Gretzky"
+    },
+    {
+        "text": "The best time to plant a tree was 20 years ago. The second best time is now.",
+        "author": "Chinese Proverb"
+    },
+    {
+        "text": "It does not matter how slowly you go as long as you do not stop.",
+        "author": "Confucius"
+    },
+    {
+        "text": "Everything you’ve ever wanted is on the other side of fear.",
+        "author": "George Addair"
+    },
+    {
+        "text": "Hard choices, easy life. Easy choices, hard life.",
+        "author": "Jerzy Gregorek"
+    },
+    {
+        "text": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+        "author": "Winston Churchill"
+    },
+    {
+        "text": "Do what you can, with what you have, where you are.",
+        "author": "Theodore Roosevelt"
+    },
+    {
+        "text": "You don’t have to be great to start, but you have to start to be great.",
+        "author": "Zig Ziglar"
+    },
+    {
+        "text": "The secret of getting ahead is getting started.",
+        "author": "Mark Twain"
+    },
+    {
+        "text": "Motivation is what gets you started. Habit is what keeps you going.",
+        "author": "Jim Ryun"
+    },
+    {
+        "text": "Discipline is choosing between what you want now and what you want most.",
+        "author": "Abraham Lincoln"
+    },
+    {
+        "text": "Amateurs sit and wait for inspiration, the rest of us just get up and go to work.",
+        "author": "Stephen King"
+    },
+    {
+        "text": "Focus on being productive instead of busy.",
+        "author": "Tim Ferriss"
+    },
+    {
+        "text": "You do not rise to the level of your goals. You fall to the level of your systems.",
+        "author": "James Clear"
+    },
+    {
+        "text": "If you spend too much time thinking about a thing, you’ll never get it done.",
+        "author": "Bruce Lee"
+    },
+    {
+        "text": "Action is the foundational key to all success.",
+        "author": "Pablo Picasso"
+    },
+    {
+        "text": "Someday is not a day of the week.",
+        "author": "Janet Dailey"
+    },
+    {
+        "text": "The man who moves a mountain begins by carrying away small stones.",
+        "author": "Confucius"
+    },
+    {
+        "text": "Continuous improvement is better than delayed perfection.",
+        "author": "Mark Twain"
+    },
+    {
+        "text": "Time is what we want most, but what we use worst.",
+        "author": "William Penn"
+    },
+    {
+        "text": "Don’t wait. The time will never be just right.",
+        "author": "Napoleon Hill"
+    },
+    {
+        "text": "Your future is created by what you do today, not tomorrow.",
+        "author": "Robert Kiyosaki"
+    },
+    {
+        "text": "Make each day your masterpiece.",
+        "author": "John Wooden"
+    },
+    {
+        "text": "Productivity is never an accident. It is always the result of a commitment to excellence, intelligent planning, and focused effort.",
+        "author": "Paul J. Meyer"
+    },
+    {
+        "text": "The key is in not spending time, but in investing it.",
+        "author": "Stephen R. Covey"
+    },
+    {
+        "text": "Until we can manage time, we can manage nothing else.",
+        "author": "Peter Drucker"
+    },
+    {
+        "text": "Either you run the day, or the day runs you.",
+        "author": "Jim Rohn"
+    },
+    {
+        "text": "Nothing is less productive than to make more efficient what should not be done at all.",
+        "author": "Peter Drucker"
+    },
+    {
+        "text": "If you have time to whine and complain about something then you have the time to do something about it.",
+        "author": "Anthony J. D’Angelo"
+    },
+    {
+        "text": "A year from now you may wish you had started today.",
+        "author": "Karen Lamb"
+    },
+    {
+        "text": "Don’t watch the clock; do what it does. Keep going.",
+        "author": "Sam Levenson"
+    },
+    {
+        "text": "The scariest moment is always just before you start.",
+        "author": "Stephen King"
+    },
+    {
+        "text": "What we fear doing most is usually what we most need to do.",
+        "author": "Tim Ferriss"
+    },
+    {
+        "text": "You can’t cross the sea merely by standing and staring at the water.",
+        "author": "Rabindranath Tagore"
+    },
+    {
+        "text": "It’s not knowing what to do, it’s doing what you know.",
+        "author": "Tony Robbins"
+    },
+    {
+        "text": "It always seems impossible until it’s done.",
+        "author": "Nelson Mandela"
+    },
+    {
+        "text": "Life is 10% what happens to you and 90% how you react to it.",
+        "author": "Charles R. Swindoll"
+    },
+    {
+        "text": "The mind is everything. What you think you become.",
+        "author": "Buddha"
+    },
+    {
+        "text": "An unexamined life is not worth living.",
+        "author": "Socrates"
+    },
+    {
+        "text": "Happiness is not something ready made. It comes from your own actions.",
+        "author": "Dalai Lama"
+    },
+    {
+        "text": "To dare is to lose one’s footing momentarily. Not to dare is to lose oneself.",
+        "author": "Søren Kierkegaard"
+    },
+    {
+        "text": "In the middle of difficulty lies opportunity.",
+        "author": "Albert Einstein"
+    },
+    {
+        "text": "No man ever steps in the same river twice, for it’s not the same river and he’s not the same man.",
+        "author": "Heraclitus"
+    },
+    {
+        "text": "Knowledge speaks, but wisdom listens.",
+        "author": "Jimi Hendrix"
+    },
+    {
+        "text": "Don’t let yesterday take up too much of today.",
+        "author": "Will Rogers"
+    },
+    {
+        "text": "Whatever you are, be a good one.",
+        "author": "Abraham Lincoln"
+    },
+    {
+        "text": "If you tell the truth, you don’t have to remember anything.",
+        "author": "Mark Twain"
+    },
+    {
+        "text": "You only live once, but if you do it right, once is enough.",
+        "author": "Mae West"
+    },
+    {
+        "text": "Be the change that you wish to see in the world.",
+        "author": "Mahatma Gandhi"
+    },
+    {
+        "text": "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.",
+        "author": "Ralph Waldo Emerson"
+    },
+    {
+        "text": "Two things are infinite: the universe and human stupidity; and I am not sure about the universe.",
+        "author": "Albert Einstein"
+    },
+    {
+        "text": "Without music, life would be a mistake.",
+        "author": "Friedrich Nietzsche"
+    },
+    {
+        "text": "The only true wisdom is in knowing you know nothing.",
+        "author": "Socrates"
+    },
+    {
+        "text": "The superior man is modest in his speech, but exceeds in his actions.",
+        "author": "Confucius"
+    },
+    {
+        "text": "It does not do to dwell on dreams and forget to live.",
+        "author": "J.K. Rowling"
     }
 ]
