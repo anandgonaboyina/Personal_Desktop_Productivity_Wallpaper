@@ -4,14 +4,18 @@ color 0B
 
 echo ========================================================
 echo       PRODUCTIVE DASHBOARD - AUTO SETUP WIZARD
+echo       Made with ❤️ by Anand
 echo ========================================================
 echo.
 echo Welcome! This wizard will completely set up the dashboard,
-echo install required software, configure the database, and
-echo set it to start automatically in the background.
+echo install required software, and configure your local SQLite
+echo database (no XAMPP or servers required!).
 echo.
-echo If anything goes wrong, you can safely close this window
-echo and run setup.bat again.
+echo REQUIREMENTS BEFORE PROCEEDING:
+echo - An active INTERNET connection is required right now.
+echo.
+echo If anything goes wrong during setup, safely close this
+echo window and run setup.bat again.
 echo.
 pause
 
@@ -92,11 +96,25 @@ echo The dashboard is now fully installed and configured.
 echo It will automatically start silently every time you turn
 echo on your PC.
 echo.
-echo To start it RIGHT NOW without rebooting:
-echo Double-click the 'start_hidden.vbs' file in this folder.
+echo [ HOW TO START AND TEST ]
+echo 1. To start it RIGHT NOW without rebooting:
+echo    Double-click the 'start_hidden.vbs' file in this folder.
 echo.
-echo Finally, open Lively Wallpaper, click 'Add Wallpaper',
-echo and enter: http://localhost:3000
+echo 2. Check if it is working by opening your normal web
+echo    browser (Chrome/Edge) and going to:
+echo    http://localhost:3000
+echo.
+echo [ LIVELY WALLPAPER SETUP ]
+echo 1. Open Lively Wallpaper.
+echo 2. Click 'Add Wallpaper' (+) at the top right.
+echo 3. Choose 'Enter URL' and type: http://localhost:3000
+echo 4. Click the arrow to save and apply.
+echo.
+echo [ TROUBLESHOOTING TIP ]
+echo If you are using Lively Wallpaper and a button or element
+echo is not responding to your click, simply click on an empty
+echo space or another element first to regain focus, then click
+echo again. It will work!
 echo.
 echo Enjoy your Productive Dashboard!
 echo ========================================================
