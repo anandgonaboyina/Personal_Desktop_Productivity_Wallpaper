@@ -4,7 +4,7 @@ color 0B
 
 echo ========================================================
 echo       PRODUCTIVE DASHBOARD - AUTO SETUP WIZARD
-echo       Made with ❤️ by Anand
+echo       Made with ❤️ by Anand for More efficiently work every day
 echo ========================================================
 echo.
 echo Welcome! This wizard will completely set up the dashboard,
@@ -15,7 +15,7 @@ echo REQUIREMENTS BEFORE PROCEEDING:
 echo - An active INTERNET connection is required right now.
 echo.
 echo If anything goes wrong during setup, safely close this
-echo window and run setup.bat again.
+echo window and run setup.bat again, but just follow carefully all instructions.
 echo.
 pause
 
