@@ -81,6 +81,7 @@ export default function VideoBackground() {
             // Once playing successfully, restore the user's desired mute state
             if (videoRef.current) {
               videoRef.current.muted = isVideoMuted;
+              videoRef.current.volume = 0.5; // Fixed at 50%
             }
           }).catch(e => {
             console.log("Video play failed", e);
@@ -88,6 +89,7 @@ export default function VideoBackground() {
         } else {
           videoRef.current.pause();
           videoRef.current.muted = isVideoMuted;
+          videoRef.current.volume = 0.5; // Fixed at 50%
         }
       }
     };
