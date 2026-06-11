@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Profile {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+}
+
 model DashboardStorage {
   id        Int      @id @default(1)
   data      Json
@@ -15,10 +21,13 @@ model DashboardStorage {
 
 model HealthRecord {
   id        Int      @id @default(autoincrement())
-  date      String   @unique // 'YYYY-MM-DD'
+  profileId Int      @default(1)
+  date      String   
   water     Int      @default(0)
   stretch   Int      @default(0)
   reading   Int      @default(0)
   academic  Int      @default(0)
   english   Int      @default(0)
+
+  @@unique([profileId, date])
 }

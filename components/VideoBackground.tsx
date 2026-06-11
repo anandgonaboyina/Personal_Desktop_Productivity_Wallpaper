@@ -16,14 +16,22 @@ export default function VideoBackground() {
 
   // Fetch dynamic backgrounds
   useEffect(() => {
-    fetch('/api/wallpapers')
-      .then(res => res.json())
-      .then(data => {
-        if (data.backgrounds && data.backgrounds.length > 0) {
-          setBackgrounds(data.backgrounds);
-        }
-      })
-      .catch(err => console.error("Failed to load wallpapers:", err));
+    const fetchWallpapers = () => {
+      fetch('/api/wallpapers')
+        .then(res => res.json())
+        .then(data => {
+          if (data.backgrounds && data.backgrounds.length > 0) {
+            setBackgrounds(data.backgrounds);
+          }
+        })
+        .catch(err => console.error("Failed to load wallpapers:", err));
+    };
+
+    fetchWallpapers();
+    
+    // Listen for updates from SettingsModal
+    window.addEventListener('wallpapers-updated', fetchWallpapers);
+    return () => window.removeEventListener('wallpapers-updated', fetchWallpapers);
   }, []);
 
   const safeIndex = bgIndex % backgrounds.length;

@@ -66,6 +66,8 @@ interface DashboardState {
   toggleTaskManager: () => void;
   isStatsOpen: boolean;
   toggleStats: () => void;
+  isSettingsOpen: boolean;
+  toggleSettings: () => void;
   timerTrigger: { mins: number; ts: number; taskId?: string; taskTitle?: string } | null;
   triggerTimer: (mins: number, taskId?: string, taskTitle?: string) => void;
 
@@ -146,28 +148,39 @@ interface DashboardState {
 // data survives PC reboots in Lively Wallpaper (WebView2 wipes localStorage).
 // Falls back to localStorage when the API is unavailable (e.g. offline dev).
 // ---------------------------------------------------------------------------
+const getActiveProfileId = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('dashboard-active-profile') || '1';
+  }
+  return '1';
+};
+
 const fileStorage = createJSONStorage(() => ({
   getItem: async (_name: string): Promise<string | null> => {
     try {
-      const res = await fetch('/api/store', { cache: 'no-store' });
+      const res = await fetch(`/api/store?profileId=${getActiveProfileId()}`, { cache: 'no-store' });
       if (!res.ok) throw new Error('API error');
       const json = await res.json();
+      
+      // If the API returns explicitly null data (new profile), we MUST return null 
+      // so Zustand starts from the default empty state, instead of falling back to old localStorage.
+      if (json.data === null) return null;
       if (json.data) return JSON.stringify(json.data);
     } catch {
-      // Fall back to localStorage
+      // Fall back to localStorage only if API is completely offline
     }
-    return localStorage.getItem('dashboard-storage');
+    return localStorage.getItem(`dashboard-storage-${getActiveProfileId()}`);
   },
   setItem: async (_name: string, value: string): Promise<void> => {
     try {
       await fetch('/api/store', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: JSON.parse(value) }),
+        body: JSON.stringify({ profileId: getActiveProfileId(), data: JSON.parse(value) }),
       });
     } catch {
       // Only write to localStorage if API fails to prevent infinite cross-tab storage event loops
-      localStorage.setItem('dashboard-storage', value);
+      localStorage.setItem(`dashboard-storage-${getActiveProfileId()}`, value);
     }
   },
   removeItem: async (_name: string): Promise<void> => {
@@ -175,10 +188,10 @@ const fileStorage = createJSONStorage(() => ({
       await fetch('/api/store', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: null }),
+        body: JSON.stringify({ profileId: getActiveProfileId(), data: null }),
       });
     } catch { 
-      localStorage.removeItem('dashboard-storage');
+      localStorage.removeItem(`dashboard-storage-${getActiveProfileId()}`);
     }
   },
 }));
@@ -236,6 +249,8 @@ export const useDashboardStore = create<DashboardState>()(
       toggleTaskManager: () => set((state) => ({ isTaskManagerOpen: !state.isTaskManagerOpen })),
       isStatsOpen: false,
       toggleStats: () => set((state) => ({ isStatsOpen: !state.isStatsOpen })),
+      isSettingsOpen: false,
+      toggleSettings: () => set((state) => ({ isSettingsOpen: !state.isSettingsOpen })),
       timerTrigger: null,
       triggerTimer: (mins, taskId, taskTitle) => set({ timerTrigger: { mins, ts: Date.now(), taskId, taskTitle } }),
 
@@ -354,7 +369,7 @@ export const useDashboardStore = create<DashboardState>()(
       healthData: {},
       fetchHealthData: async () => {
         try {
-          const res = await fetch('/api/health');
+          const res = await fetch(`/api/health?profileId=${getActiveProfileId()}`);
           if (res.ok) {
             const json = await res.json();
             if (json.data) {
@@ -385,7 +400,7 @@ export const useDashboardStore = create<DashboardState>()(
         fetch('/api/health', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dateKey, metric, incrementValue })
+          body: JSON.stringify({ profileId: getActiveProfileId(), dateKey, metric, incrementValue })
         }).catch(err => console.error("Failed to sync health data", err));
       },
 
@@ -406,7 +421,7 @@ export const useDashboardStore = create<DashboardState>()(
         Object.entries(state).filter(([key]) => ![
           'isQuotePopupOpen', 'isTaskManagerOpen', 'isStatsOpen', 'timerTrigger', 
           'isNotesOpen', 'isPlansOpen', 'isTimetableOpen', 'isHealthModalOpen', 'healthData',
-          'isVideoMuted', 'isVideoPlaying'
+          'isVideoMuted', 'isVideoPlaying', 'isSettingsOpen'
         ].includes(key))
       ),
     }

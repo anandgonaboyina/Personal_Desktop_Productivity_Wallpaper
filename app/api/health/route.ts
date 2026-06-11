@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const profileId = parseInt(searchParams.get('profileId') || '1');
+
     const records = await prisma.healthRecord.findMany({
+      where: { profileId },
       orderBy: { date: 'asc' }
     });
 
@@ -28,19 +32,27 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { dateKey, metric, incrementValue } = await request.json();
+    const body = await request.json();
+    const { dateKey, metric, incrementValue } = body;
+    const profileId = body.profileId ? parseInt(body.profileId) : 1;
 
     if (!dateKey || !metric || incrementValue === undefined) {
       return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
     }
 
-    // Upsert the record for the specific date
+    // Upsert the record for the specific date and profile
     const updatedRecord = await prisma.healthRecord.upsert({
-      where: { date: dateKey },
+      where: {
+        profileId_date: {
+          profileId,
+          date: dateKey
+        }
+      },
       update: {
         [metric]: { increment: incrementValue },
       },
       create: {
+        profileId,
         date: dateKey,
         water: 0,
         stretch: 0,

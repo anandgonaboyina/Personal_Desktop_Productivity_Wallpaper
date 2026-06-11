@@ -14,8 +14,9 @@ import Timetable from "@/components/Timetable";
 import HealthRings from "@/components/HealthRings";
 import HealthModal from "@/components/HealthModal";
 import DraggableClock from "@/components/DraggableClock";
+import SettingsModal from "@/components/SettingsModal";
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, CalendarDays } from "lucide-react";
+import { ChevronDown, ChevronUp, CalendarDays, Settings } from "lucide-react";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { fetchQuote } from "@/utils/quoteEngine";
 
@@ -140,7 +141,7 @@ export default function Dashboard() {
       {/* Dashboard components will be positioned absolutely within this container */}
 
       {/* BigClock */}
-      <div className={`absolute z-[999] transition-all duration-500 ${currentBgType === 'image' ? 'inset-0 flex items-start mt-40 justify-center' : 'top-40 left-10'}`}>
+      <div className={`absolute z-[999] pointer-events-none transition-all duration-500 ${currentBgType === 'image' ? 'inset-0 flex items-start mt-40 justify-center' : 'top-40 left-10'}`}>
         <DraggableClock>
           <BigClock />
         </DraggableClock>
@@ -178,11 +179,25 @@ export default function Dashboard() {
         <HealthRings />
       </div>
 
+      {/* Settings Toggle Button */}
+      <div className="absolute bottom-[300px] right-1 z-50">
+        <button
+          onClick={useDashboardStore((state) => state.toggleSettings)}
+          className="p-2 rounded-xl border border-white/20 bg-white/10 text-white/70 hover:bg-white/20 hover:text-white backdrop-blur-xl shadow-xl transition-all hover:scale-110"
+          title="Settings"
+        >
+          <Settings size={18} />
+        </button>
+      </div>
+
       {/* Bottom Right: TaskManager & Timer */}
       <div className="absolute bottom-12 right-12 z-50 flex flex-col items-end gap-2">
         {!isHidden && <TaskManager />}
         <Timer />
       </div>
+
+      {/* Settings Modal */}
+      <SettingsModal />
     </main>
   );
 }

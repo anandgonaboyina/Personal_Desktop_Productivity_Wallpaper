@@ -65,7 +65,7 @@ export default function DraggableClock({ children }: { children: React.ReactNode
 
   return (
     <div 
-      className={`relative inline-block transition-transform ${!isDragging ? 'duration-300' : 'duration-0'} cursor-move group`}
+      className={`relative inline-block pointer-events-auto transition-transform ${!isDragging ? 'duration-300' : 'duration-0'} cursor-move group`}
       style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}

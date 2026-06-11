@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const profileId = parseInt(searchParams.get('profileId') || '1');
+
     const record = await prisma.dashboardStorage.findUnique({
-      where: { id: 1 },
+      where: { id: profileId },
     });
     
     if (!record) {
@@ -21,14 +24,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const profileId = body.profileId ? parseInt(body.profileId) : 1;
     
     await prisma.dashboardStorage.upsert({
-      where: { id: 1 },
+      where: { id: profileId },
       update: {
         data: body.data || {},
       },
       create: {
-        id: 1,
+        id: profileId,
         data: body.data || {},
       },
     });
