@@ -4,10 +4,12 @@ import { useDashboardStore } from "@/store/dashboardStore";
 
 export default function VideoBackground() {
   const bgIndex = useDashboardStore((state) => state.bgIndex);
+  const hiddenWallpapers = useDashboardStore((state) => state.hiddenWallpapers);
+  const lockedWallpaper = useDashboardStore((state) => state.lockedWallpaper);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const [backgrounds, setBackgrounds] = useState<{ type: string, src: string }[]>([
-    { type: 'image', src: '/api/media?file=naruto.webp' } // Fallback initial state
+  const [backgrounds, setBackgrounds] = useState<{ type: string, src: string, filename?: string }[]>([
+    { type: 'image', src: '/api/media?file=naruto.webp', filename: 'naruto.webp' } // Fallback initial state
   ]);
   const isVideoMuted = useDashboardStore((state) => state.isVideoMuted);
   const setIsVideoMuted = useDashboardStore((state) => state.setIsVideoMuted);
@@ -26,13 +28,12 @@ export default function VideoBackground() {
         .then(res => res.json())
         .then(data => {
           if (data.backgrounds && data.backgrounds.length > 0) {
-            // Filter out hidden wallpapers using the store
-            const hidden = useDashboardStore.getState().hiddenWallpapers || [];
-            const visibleBackgrounds = data.backgrounds.filter((bg: any) => !hidden.includes(bg.filename));
+            // Filter out hidden wallpapers using the reactive store value
+            const visibleBackgrounds = data.backgrounds.filter((bg: any) => !hiddenWallpapers.includes(bg.filename));
             
             // If all are hidden, fallback to naruto.webp
             if (visibleBackgrounds.length === 0) {
-              setBackgrounds([{ type: 'image', src: '/api/media?file=naruto.webp' }]);
+              setBackgrounds([{ type: 'image', src: '/api/media?file=naruto.webp', filename: 'naruto.webp' }]);
             } else {
               setBackgrounds(visibleBackgrounds);
             }
@@ -46,7 +47,7 @@ export default function VideoBackground() {
     // Listen for updates from SettingsModal
     window.addEventListener('wallpapers-updated', fetchWallpapers);
     return () => window.removeEventListener('wallpapers-updated', fetchWallpapers);
-  }, []);
+  }, [hiddenWallpapers]);
 
   // Slideshow Logic
   useEffect(() => {
@@ -60,7 +61,14 @@ export default function VideoBackground() {
   }, [isSlideshowEnabled, slideshowIntervalMins, cycleBackground]);
 
   const safeIndex = bgIndex % backgrounds.length;
-  const currentBg = backgrounds[safeIndex];
+  
+  let currentBg = backgrounds[safeIndex];
+  if (lockedWallpaper) {
+    const lockedBg = backgrounds.find(bg => bg.filename === lockedWallpaper);
+    if (lockedBg) {
+      currentBg = lockedBg;
+    }
+  }
 
   useEffect(() => {
     // Update global store so other components know if it's image or video and its src

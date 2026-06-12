@@ -11,7 +11,7 @@ const DEFAULT_WALLPAPERS = [
 ];
 
 export default function SettingsModal() {
-  const { isSettingsOpen, toggleSettings, is24HourClock, toggle24HourClock, currentBgSrc, hiddenWallpapers, toggleWallpaperVisibility, showHealth, showQuote, showTimer, showCountdowns, showVideoControls, showClock, showTasks, showCalendar, showTodayWork, toggleVisibility, isSlideshowEnabled, setIsSlideshowEnabled, slideshowIntervalMins, setSlideshowIntervalMins, lockedWidgets, toggleWidgetLock, resetAllOffsets, clearOldData, clearAllData } = useDashboardStore();
+  const { isSettingsOpen, toggleSettings, is24HourClock, toggle24HourClock, currentBgSrc, hiddenWallpapers, toggleWallpaperVisibility, showHealth, showQuote, showTimer, showCountdowns, showVideoControls, showClock, showTasks, showCalendar, showTodayWork, toggleVisibility, isSlideshowEnabled, setIsSlideshowEnabled, slideshowIntervalMins, setSlideshowIntervalMins, lockedWidgets, toggleWidgetLock, resetAllOffsets, clearOldData, clearAllData, lockedWallpaper, setLockedWallpaper } = useDashboardStore();
   const [activeTab, setActiveTab] = useState<'wallpapers' | 'preferences' | 'profiles' | 'data' | 'about'>('wallpapers');
   const [coffeeAmount, setCoffeeAmount] = useState<number>(20);
   const [deleteDays, setDeleteDays] = useState<number>(60);
@@ -447,7 +447,11 @@ export default function SettingsModal() {
                         const isHidden = hiddenWallpapers.includes(bg.filename);
 
                         return (
-                          <div key={bg.filename} className={`relative group aspect-video rounded-xl overflow-hidden bg-black/40 border-2 transition-all ${isActive ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'border-white/10 hover:border-white/30'} ${isHidden ? 'opacity-40 grayscale' : ''}`}>
+                          <div 
+                            key={bg.filename} 
+                            onClick={() => setLockedWallpaper(bg.filename)}
+                            className={`relative cursor-pointer group aspect-video rounded-xl overflow-hidden bg-black/40 border-2 transition-all ${isActive ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'border-white/10 hover:border-white/30'} ${isHidden ? 'opacity-40 grayscale' : ''}`}
+                          >
                             {bg.type === 'image' ? (
                               <img src={bg.src} alt={bg.filename} className="w-full h-full object-cover" />
                             ) : (
@@ -460,7 +464,8 @@ export default function SettingsModal() {
                                 <span className="text-xs font-medium truncate text-white/90 drop-shadow-md pr-2">{bg.filename}</span>
                                 {isDefault ? (
                                   <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       toggleWallpaperVisibility(bg.filename);
                                       window.dispatchEvent(new Event('wallpapers-updated')); // Sync background
                                     }}
@@ -471,7 +476,10 @@ export default function SettingsModal() {
                                   </button>
                                 ) : (
                                   <button
-                                    onClick={() => handleDelete(bg.filename)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDelete(bg.filename);
+                                    }}
                                     className="p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors shrink-0 backdrop-blur-md"
                                     title="Delete wallpaper permanently"
                                   >
@@ -500,7 +508,11 @@ export default function SettingsModal() {
                         const isHidden = hiddenWallpapers.includes(bg.filename);
 
                         return (
-                          <div key={bg.filename} className={`relative group aspect-video rounded-xl overflow-hidden bg-black/40 border-2 transition-all ${isActive ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'border-white/10 hover:border-white/30'} ${isHidden ? 'opacity-40 grayscale' : ''}`}>
+                          <div 
+                            key={bg.filename} 
+                            onClick={() => setLockedWallpaper(bg.filename)}
+                            className={`relative cursor-pointer group aspect-video rounded-xl overflow-hidden bg-black/40 border-2 transition-all ${isActive ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'border-white/10 hover:border-white/30'} ${isHidden ? 'opacity-40 grayscale' : ''}`}
+                          >
                             {bg.type === 'image' ? (
                               <img src={bg.src} alt={bg.filename} className="w-full h-full object-cover" />
                             ) : (
@@ -511,7 +523,10 @@ export default function SettingsModal() {
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-medium truncate text-white/90 drop-shadow-md pr-2">{bg.filename}</span>
                                 <button
-                                  onClick={() => handleDelete(bg.filename)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(bg.filename);
+                                  }}
                                   className="p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors shrink-0 backdrop-blur-md"
                                   title="Delete wallpaper permanently"
                                 >
@@ -997,12 +1012,10 @@ export default function SettingsModal() {
             </div>
 
             {/* Tiny Scroll Arrows */}
-            {activeTab !== 'data' && activeTab !== 'profiles' && (
-              <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col justify-between items-center pointer-events-none">
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => scrollBy(settingsScrollRef, 'up')} className="pointer-events-auto flex items-center justify-center w-12 h-6 bg-blue-500/80 hover:bg-blue-500 border-x border-b border-blue-400/50 rounded-b-xl text-white backdrop-blur-md transition-all shadow-[0_0_10px_rgba(59,130,246,0.5)]"><ChevronUp size={16} strokeWidth={3} /></button>
-                <button onMouseDown={(e) => e.preventDefault()} onClick={() => scrollBy(settingsScrollRef, 'down')} className="pointer-events-auto flex items-center justify-center w-12 h-6 bg-blue-500/80 hover:bg-blue-500 border-x border-t border-blue-400/50 rounded-t-xl text-white backdrop-blur-md transition-all shadow-[0_0_10px_rgba(59,130,246,0.5)]"><ChevronDown size={16} strokeWidth={3} /></button>
-              </div>
-            )}
+            <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col justify-between items-center pointer-events-none">
+              <button onMouseDown={(e) => e.preventDefault()} onClick={() => scrollBy(settingsScrollRef, 'up')} className="pointer-events-auto flex items-center justify-center w-12 h-6 bg-blue-500/80 hover:bg-blue-500 border-x border-b border-blue-400/50 rounded-b-xl text-white backdrop-blur-md transition-all shadow-[0_0_10px_rgba(59,130,246,0.5)]"><ChevronUp size={16} strokeWidth={3} /></button>
+              <button onMouseDown={(e) => e.preventDefault()} onClick={() => scrollBy(settingsScrollRef, 'down')} className="pointer-events-auto flex items-center justify-center w-12 h-6 bg-blue-500/80 hover:bg-blue-500 border-x border-t border-blue-400/50 rounded-t-xl text-white backdrop-blur-md transition-all shadow-[0_0_10px_rgba(59,130,246,0.5)]"><ChevronDown size={16} strokeWidth={3} /></button>
+            </div>
           </div>
         </div>
       </div>

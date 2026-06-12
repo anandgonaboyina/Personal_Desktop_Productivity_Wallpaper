@@ -53,6 +53,8 @@ interface DashboardState {
   history: Record<string, number>;
   tasks: Task[];
   isHidden: boolean;
+  lockedWallpaper: string | null;
+  setLockedWallpaper: (filename: string | null) => void;
   setWallpaper: (url: string) => void;
   addMins: (dateKey: string, mins: number) => void;
   setTasks: (tasks: Task[]) => void;
@@ -241,12 +243,14 @@ export const useDashboardStore = create<DashboardState>()(
       wallpaper: '/wallpaper.webp',
       bgIndex: 0,
       currentBgType: null,
+      lockedWallpaper: null,
       history: {},
       tasks: [],
       isHidden: false,
 
+      setLockedWallpaper: (filename) => set({ lockedWallpaper: filename }),
       setWallpaper: (url) => set({ wallpaper: url }),
-      cycleBackground: () => set((state) => ({ bgIndex: state.bgIndex + 1 })),
+      cycleBackground: () => set((state) => ({ lockedWallpaper: null, bgIndex: state.bgIndex + 1 })),
       setCurrentBgType: (type) => set({ currentBgType: type }),
       currentBgSrc: null,
       setCurrentBgSrc: (src) => set({ currentBgSrc: src }),
