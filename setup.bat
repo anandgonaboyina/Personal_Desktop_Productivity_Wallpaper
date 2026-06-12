@@ -5,7 +5,7 @@ color 0B
 
 echo ========================================================
 echo       PRODUCTIVE DASHBOARD - AUTO SETUP WIZARD
-echo       Made with ❤️ by Anand for More efficiently work every day
+echo       Made with Love by Anand for More efficiently work every day
 echo ========================================================
 echo.
 echo Welcome! This wizard will completely set up the dashboard,
