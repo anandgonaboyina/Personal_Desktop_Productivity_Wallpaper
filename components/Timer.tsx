@@ -255,9 +255,9 @@ export default function Timer() {
         {/* Timer Display / Editor */}
         <div className="text-center min-h-[80px] flex flex-col items-center justify-center relative">
           {activeTaskTitle && (
-            <div className="w-full max-w-[200px] mb-3 text-xs font-medium text-blue-200 flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-              <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
-              <span className="truncate">{activeTaskTitle}</span>
+            <div className="w-full max-w-[200px] mb-3 text-xs font-medium text-blue-200 flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-2xl shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+              <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse mt-1 self-start"></span>
+              <span className="break-words whitespace-normal text-center leading-snug">{activeTaskTitle}</span>
             </div>
           )}
           {isEditingTime ? (

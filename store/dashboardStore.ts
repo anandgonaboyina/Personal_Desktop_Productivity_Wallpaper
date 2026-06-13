@@ -20,6 +20,12 @@ export interface SubTopic {
   completed: boolean;
 }
 
+export interface Deadline {
+  id: string;
+  date: string; // "YYYY-MM-DD" format
+  text: string;
+}
+
 export interface Plan {
   id: string;
   title: string;
@@ -126,6 +132,12 @@ interface DashboardState {
   // Countdowns
   countdowns: { id: string; title: string; endDate: string | null }[];
   updateCountdown: (id: string, title: string, endDate: string | null) => void;
+
+  // Deadlines
+  deadlines: Deadline[];
+  addDeadline: (date: string, text: string) => void;
+  updateDeadline: (id: string, text: string) => void;
+  deleteDeadline: (id: string) => void;
 
   // Timetable
   timetableGrid: TimetableGrid;
@@ -403,6 +415,18 @@ export const useDashboardStore = create<DashboardState>()(
       ],
       updateCountdown: (id, title, endDate) => set((state) => ({
         countdowns: state.countdowns.map(c => c.id === id ? { ...c, title, endDate } : c)
+      })),
+
+      // Deadlines
+      deadlines: [],
+      addDeadline: (date, text) => set((state) => ({
+        deadlines: [...state.deadlines, { id: Date.now().toString() + Math.random().toString(36).substr(2, 5), date, text }]
+      })),
+      updateDeadline: (id, text) => set((state) => ({
+        deadlines: state.deadlines.map(d => d.id === id ? { ...d, text } : d)
+      })),
+      deleteDeadline: (id) => set((state) => ({
+        deadlines: state.deadlines.filter(d => d.id !== id)
       })),
 
       // Timetable

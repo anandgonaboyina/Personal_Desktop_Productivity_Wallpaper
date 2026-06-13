@@ -55,4 +55,35 @@ body {
   scrollbar-gutter: stable;
 }
 
+/* Custom Scrollbar with Arrows for specific lists */
+.arrow-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+.arrow-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+.arrow-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+.arrow-scrollbar::-webkit-scrollbar-button:single-button {
+  background-color: transparent;
+  display: block;
+  height: 14px;
+  width: 10px;
+  background-size: 8px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.arrow-scrollbar::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M18 15l-6-6-6 6'/></svg>");
+}
+.arrow-scrollbar::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+}
+.arrow-scrollbar::-webkit-scrollbar-button:single-button:vertical:decrement:hover,
+.arrow-scrollbar::-webkit-scrollbar-button:single-button:vertical:increment:hover {
+  background-color: rgba(255,255,255,0.1);
+}
 

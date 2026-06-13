@@ -177,6 +177,13 @@ function GalleryView({ groupedPlans, onSelect }: { groupedPlans: Record<string, 
               const completed = plan.subTopics.filter(st => st.completed).length;
               const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
 
+              const today = new Date();
+              today.setHours(0,0,0,0);
+              const targetDate = new Date(plan.endDate);
+              targetDate.setHours(0,0,0,0);
+              const diffTime = targetDate.getTime() - today.getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
               return (
                 <div
                   key={plan.id}
@@ -187,20 +194,37 @@ function GalleryView({ groupedPlans, onSelect }: { groupedPlans: Record<string, 
                   {plan.thumbnailBase64 ? (
                     <div
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                      style={{ backgroundImage: `url(${plan.thumbnailBase64})`, backgroundColor: '#1f2937' }}
+                      style={{ backgroundImage: `url("${plan.thumbnailBase64}")`, backgroundColor: '#1f2937' }}
                     />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-purple-900 transition-transform duration-700 group-hover:scale-110 flex items-center justify-center p-4">
                        <span className="text-white/20 font-bold text-3xl text-center uppercase tracking-widest leading-none drop-shadow-md break-words">{plan.title}</span>
                     </div>
                   )}
+                  {/* Top Middle Days Left Badge */}
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 w-full flex justify-center pointer-events-none">
+                    {diffDays > 0 ? (
+                      <span className="flex items-center gap-1.5 text-white bg-blue-500/80 backdrop-blur-md px-3 py-1 rounded-full border border-blue-400/50 shadow-lg text-xs font-bold tracking-widest uppercase">
+                        {diffDays} Days Left
+                      </span>
+                    ) : diffDays === 0 ? (
+                      <span className="flex items-center gap-1.5 text-white bg-orange-500/80 backdrop-blur-md px-3 py-1 rounded-full border border-orange-400/50 shadow-lg text-xs font-bold tracking-widest uppercase">
+                        Due Today
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-white bg-red-500/80 backdrop-blur-md px-3 py-1 rounded-full border border-red-400/50 shadow-lg text-xs font-bold tracking-widest uppercase">
+                        {Math.abs(diffDays)} Days Overdue
+                      </span>
+                    )}
+                  </div>
+
                   {/* Gradient Overlay for text readability */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
 
                   <div className="absolute inset-0 p-5 flex flex-col justify-end">
                     <h4 className="text-xl font-bold text-white mb-1 line-clamp-1">{plan.title}</h4>
 
-                    <div className="flex items-center gap-3 text-xs font-medium text-white/60 mb-3">
+                    <div className="flex items-center flex-wrap gap-2 text-xs font-medium text-white/60 mb-3">
                       <span className="flex items-center gap-1"><Clock size={12} /> {plan.duration}</span>
                       <span className="flex items-center gap-1"><Calendar size={12} /> {parseLocalDate(plan.endDate)}</span>
                     </div>
@@ -394,19 +418,43 @@ function DetailView({ plan, onAddSub, onToggleSub, onDeleteSub, onDeletePlan }: 
   const completed = plan.subTopics.filter(st => st.completed).length;
   const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
 
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const targetDate = new Date(plan.endDate);
+  targetDate.setHours(0,0,0,0);
+  const diffTime = targetDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
   return (
     <div className="max-w-4xl mx-auto flex gap-8 h-full animate-in slide-in-from-bottom-8 duration-500">
       {/* Left Column: Visuals & Progress */}
       <div className="w-1/3 flex flex-col gap-6 shrink-0">
         <div className="w-full aspect-square rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative">
           {plan.thumbnailBase64 ? (
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${plan.thumbnailBase64})`, backgroundColor: '#1f2937' }} />
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${plan.thumbnailBase64}")`, backgroundColor: '#1f2937' }} />
           ) : (
              <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center p-4">
                <span className="text-white/20 font-bold text-4xl text-center uppercase tracking-widest leading-none drop-shadow-md break-words">{plan.title}</span>
              </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+          {/* Top Middle Days Left Badge */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-full flex justify-center pointer-events-none">
+            {diffDays > 0 ? (
+              <span className="flex items-center gap-2 text-white bg-blue-500/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-blue-400/50 shadow-lg text-sm font-bold tracking-widest uppercase">
+                <Calendar size={14} /> {diffDays} Days Left
+              </span>
+            ) : diffDays === 0 ? (
+              <span className="flex items-center gap-2 text-white bg-orange-500/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-orange-400/50 shadow-lg text-sm font-bold tracking-widest uppercase">
+                <Clock size={14} /> Due Today
+              </span>
+            ) : (
+              <span className="flex items-center gap-2 text-white bg-red-500/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-red-400/50 shadow-lg text-sm font-bold tracking-widest uppercase">
+                <Clock size={14} /> {Math.abs(diffDays)} Days Overdue
+              </span>
+            )}
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
           <div className="absolute bottom-4 left-4 right-4 text-center flex flex-col gap-2">
             <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-xs font-semibold text-white tracking-widest uppercase shadow-xl inline-block mx-auto border border-white/10">
               {plan.category}
@@ -431,7 +479,7 @@ function DetailView({ plan, onAddSub, onToggleSub, onDeleteSub, onDeletePlan }: 
                 </div>
               </div>
             ) : (
-              <div className="flex justify-center gap-2 group cursor-pointer" onClick={() => setIsEditing(true)} title="Click to edit">
+              <div className="flex justify-center gap-2 flex-wrap group cursor-pointer" onClick={() => setIsEditing(true)} title="Click to edit">
                 <span className="flex items-center gap-1 px-2 py-1 bg-black/60 group-hover:bg-black/80 backdrop-blur-md rounded-full text-[10px] font-medium text-white/80 border border-white/10 transition-colors">
                   <Clock size={10} /> {plan.duration}
                 </span>

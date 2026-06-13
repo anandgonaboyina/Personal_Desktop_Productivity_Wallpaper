@@ -68,14 +68,14 @@ export default function TaskManager() {
                             {tasks.map((task) => (
                                 <div
                                     key={task.id}
-                                    className={`group flex items-center justify-between p-3 rounded-2xl border border-transparent hover:border-white/10 hover:bg-white/5 transition-all ${task.completed ? 'opacity-50' : ''}`}
+                                    className={`group flex items-start justify-between p-3 rounded-2xl border border-transparent hover:border-white/10 hover:bg-white/5 transition-all ${task.completed ? 'opacity-50' : ''}`}
                                 >
-                                    <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
+                                    <div className="flex items-start gap-3 flex-1 min-w-0">
                                         <button onClick={() => handleToggleTask(task.id)} className="shrink-0 text-white/60 hover:text-white transition-colors">
                                             {task.completed ? <CheckCircle size={20} className="text-green-400" /> : <Circle size={20} />}
                                         </button>
-                                        <div className="flex flex-col flex-1 min-w-0">
-                                            <span className={`truncate text-sm ${task.completed ? 'line-through' : ''}`}>
+                                        <div className="flex flex-col flex-1 min-w-0 w-full">
+                                            <span className={`whitespace-normal break-words text-sm leading-snug ${task.completed ? 'line-through' : ''}`}>
                                                 {task.title}
                                             </span>
                                             {task.duration > 0 && !task.completed && (
@@ -97,7 +97,7 @@ export default function TaskManager() {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex items-center gap-2 shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={() => triggerTimer(task.duration, task.id, task.title)}
                                             className="p-1.5 bg-blue-500/20 text-blue-300 hover:bg-blue-500 hover:text-white rounded-lg transition-colors"
