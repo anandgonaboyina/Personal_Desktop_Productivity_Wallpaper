@@ -198,7 +198,11 @@ echo WshShell.Run "npm start", 0, False >> start-server.vbs
 
 echo Generating start-lively.vbs (60s delay)...
 echo Set WshShell = CreateObject("WScript.Shell") > start-lively.vbs
-echo WScript.Sleep 60000 >> start-lively.vbs
+echo If WScript.Arguments.Count = 0 Then >> start-lively.vbs
+echo     WScript.Sleep 60000 >> start-lively.vbs
+echo ElseIf WScript.Arguments(0) ^<^> "nowait" Then >> start-lively.vbs
+echo     WScript.Sleep 60000 >> start-lively.vbs
+echo End If >> start-lively.vbs
 echo WshShell.Run """!LIVELY_EXE!""", 0, False >> start-lively.vbs
 
 :: Cleanup old scripts

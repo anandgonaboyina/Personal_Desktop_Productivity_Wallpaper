@@ -1569,15 +1569,8 @@ export default function SettingsModal() {
                             <p className="text-xs text-white/70 mb-3 leading-relaxed">
                               Applying this update will temporarily stop your server in the background to safely rebuild the source code. The dashboard will automatically restart once finished.
                             </p>
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs font-semibold text-white/50 uppercase tracking-widest whitespace-nowrap">Type 'update' to confirm:</span>
-                              <input
-                                type="text"
-                                value={updateConfirmText}
-                                onChange={(e) => setUpdateConfirmText(e.target.value)}
-                                placeholder="update"
-                                className="w-full max-w-[120px] bg-black/40 border border-white/20 rounded-lg px-3 py-1.5 text-sm font-bold text-white focus:border-red-500 outline-none transition-colors"
-                              />
+                            <div className="flex items-center gap-3 mt-2">
+                              <span className="text-xs font-semibold text-white/50 uppercase tracking-widest whitespace-nowrap">Click "Update Now" to begin the seamless background update.</span>
                             </div>
                           </div>
                         </div>
@@ -1586,7 +1579,7 @@ export default function SettingsModal() {
 
                     <button
                       onClick={updateAvailable ? handleApplyUpdate : handleCheckUpdate}
-                      disabled={isUpdating || (updateAvailable && updateConfirmText.toLowerCase() !== 'update')}
+                      disabled={isUpdating}
                       className={`mt-4 flex items-center gap-2 ${updateAvailable ? 'bg-green-600 hover:bg-green-500 shadow-green-500/20 hover:shadow-green-500/40' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20 hover:shadow-blue-500/40'} disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl transition-all font-bold shadow-lg`}
                     >
                       {isUpdating ? (

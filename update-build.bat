@@ -52,9 +52,11 @@ if %errorLevel% neq 0 (
 )
 
 echo.
-echo [1/5] STOPPING BACKGROUND SERVER...
+echo [1/5] STOPPING BACKGROUND SERVER AND WALLPAPER...
+call taskkill /F /IM livelywpf.exe >nul 2>&1
+call taskkill /F /IM Lively.exe >nul 2>&1
 call npx -y kill-port 4321
-echo Server stopped.
+echo Server and Wallpaper stopped.
 
 echo.
 echo [2/5] BACKING UP DATABASE TO PREVENT DATA LOSS...
@@ -101,8 +103,11 @@ echo Rebooting the background server now...
 start wscript "start-server.vbs" "nowait"
 echo.
 echo Server is starting up in the background!
-echo Please REFRESH your Dashboard ^(or right-click Reload in Lively Wallpaper^)
-echo in about 10 to 20 seconds once the server comes online.
-timeout /t 10
+echo Waiting 5 seconds before starting Lively Wallpaper...
+timeout /t 5
+start wscript "start-lively.vbs" "nowait"
+echo.
+echo Lively Wallpaper has been started. Update complete!
+timeout /t 5
 exit
 )
