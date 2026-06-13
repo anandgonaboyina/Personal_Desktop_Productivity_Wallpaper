@@ -1,0 +1,1 @@
+import { PrismaClient } from '@prisma/client'; const prisma = new PrismaClient(); async function main() { const record = await prisma.dashboardStorage.findUnique({where:{id:1}}); console.log(JSON.stringify(JSON.parse(record?.data || '{}').plans, null, 2)); } main().finally(()=>prisma.$disconnect());

@@ -52,8 +52,19 @@ start-server.vbs
 start-lively.vbs
 
 # User uploaded media
-public/thumbnails/
-public/wallpapers/
+public/thumbnails/*
+!public/thumbnails/.gitkeep
+
+public/wallpapers/*
+!public/wallpapers/itachi-uchiha.png
+!public/wallpapers/kakashi.mp4
+!public/wallpapers/kakashi2.mp4
+!public/wallpapers/kakashi3.png
+!public/wallpapers/kakashiChild.jpg
+!public/wallpapers/naruto.webp
+!public/wallpapers/RockLee.mp4
+!public/wallpapers/squa7.jpg
+!public/wallpapers/demonslayer1.mp4
 
 # Zips and archives
 *.zip
