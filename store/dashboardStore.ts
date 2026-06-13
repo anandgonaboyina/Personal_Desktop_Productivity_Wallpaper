@@ -6,6 +6,7 @@ export interface Task {
   title: string;
   duration: number; // in minutes
   completed: boolean;
+  timeSpent?: number; // total minutes spent on this task
 }
 
 export interface Note {
@@ -294,9 +295,13 @@ export const useDashboardStore = create<DashboardState>()(
         })),
 
       deleteTask: (id) =>
-        set((state) => ({
-          tasks: state.tasks.filter((t) => t.id !== id),
-        })),
+        set((state) => {
+          const isCurrentlyActive = state.activeTaskId === id;
+          return {
+            tasks: state.tasks.filter((t) => t.id !== id),
+            ...(isCurrentlyActive && { activeTaskId: null, activeTaskTitle: null }),
+          };
+        }),
 
       toggleHide: () => set((state) => ({ isHidden: !state.isHidden })),
 
@@ -313,7 +318,11 @@ export const useDashboardStore = create<DashboardState>()(
       activeTaskTitle: null,
       setActiveTask: (id, title) => set({ activeTaskId: id, activeTaskTitle: title }),
       updateTaskDuration: (id, decreaseMins) => set((state) => ({
-        tasks: state.tasks.map(t => t.id === id ? { ...t, duration: Math.max(0, t.duration - decreaseMins) } : t)
+        tasks: state.tasks.map(t => t.id === id ? { 
+          ...t, 
+          duration: Math.max(0, t.duration - decreaseMins),
+          timeSpent: (t.timeSpent || 0) + decreaseMins 
+        } : t)
       })),
       editTaskDuration: (id, newDuration) => set((state) => ({
         tasks: state.tasks.map(t => t.id === id ? { ...t, duration: Math.max(0, newDuration) } : t)
