@@ -13,6 +13,7 @@ if %errorLevel% == 0 (
 )
 
 :run_update
+(
 :: Ensure we are in the script's directory
 cd /d "%~dp0"
 
@@ -104,3 +105,4 @@ echo Please REFRESH your Dashboard (or right-click Reload in Lively Wallpaper)
 echo in about 10 to 20 seconds once the server comes online.
 timeout /t 10
 exit /b 0
+)
