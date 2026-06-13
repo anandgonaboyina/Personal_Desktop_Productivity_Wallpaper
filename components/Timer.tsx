@@ -11,7 +11,7 @@ export default function Timer() {
     toggleStats, isStatsOpen,
     toggleNotes, isNotesOpen,
     togglePlans, isPlansOpen,
-    timerEndAt, setTimerEndAt, 
+    timerEndAt, setTimerEndAt,
     timerPausedLeft, setTimerPausedLeft,
     timerInitialMins, setTimerInitialMins,
     timerLastSavedChunks, setTimerLastSavedChunks,
@@ -22,7 +22,7 @@ export default function Timer() {
   } = useDashboardStore();
 
   const [customMins, setCustomMins] = useState('');
-  
+
   // Local state for UI updates (does not spam DB)
   const [localTimeLeft, setLocalTimeLeft] = useState(0);
 
@@ -30,7 +30,7 @@ export default function Timer() {
   const [isEditingTime, setIsEditingTime] = useState(false);
   const [editHours, setEditHours] = useState('00');
   const [editMins, setEditMins] = useState('25');
-  
+
   // Ensure local time immediately reflects store changes
   useEffect(() => {
     if (timerEndAt) {
@@ -46,7 +46,7 @@ export default function Timer() {
   // Helper to save partial time for an active task timer before clearing/overwriting it
   const saveAndClearActiveTaskTimer = () => {
     if (activeTaskId && timerInitialMins) {
-      let currentRemaining = localTimeLeft; 
+      let currentRemaining = localTimeLeft;
       if (timerEndAt) {
         currentRemaining = Math.max(0, Math.floor((timerEndAt - Date.now()) / 1000));
       } else if (timerPausedLeft !== null) {
@@ -57,7 +57,7 @@ export default function Timer() {
       if (elapsedSeconds > 0) {
         const finalUnsavedSeconds = elapsedSeconds - (timerLastSavedChunks * 600);
         const finalUnsavedMins = Math.round(finalUnsavedSeconds / 60);
-        
+
         if (finalUnsavedMins > 0) {
           const today = getLocalDateString();
           addMins(today, finalUnsavedMins);
@@ -65,7 +65,7 @@ export default function Timer() {
         }
       }
     }
-    
+
     setActiveTask(null, null);
     setTimerLastSavedChunks(0);
   };
@@ -80,18 +80,18 @@ export default function Timer() {
         const remaining = Math.floor((timerEndAt - now) / 1000);
 
         if (timerInitialMins && activeTaskId) {
-           const elapsedSeconds = (timerInitialMins * 60) - remaining;
-           if (elapsedSeconds >= 0) {
-             const chunks = Math.floor(elapsedSeconds / 600); // 10 minutes = 600 seconds
-             if (chunks > timerLastSavedChunks) {
-                const diff = chunks - timerLastSavedChunks;
-                const minsToSave = diff * 10;
-                const today = getLocalDateString();
-                addMins(today, minsToSave);
-                updateTaskDuration(activeTaskId, minsToSave);
-                setTimerLastSavedChunks(chunks);
-             }
-           }
+          const elapsedSeconds = (timerInitialMins * 60) - remaining;
+          if (elapsedSeconds >= 0) {
+            const chunks = Math.floor(elapsedSeconds / 600); // 10 minutes = 600 seconds
+            if (chunks > timerLastSavedChunks) {
+              const diff = chunks - timerLastSavedChunks;
+              const minsToSave = diff * 10;
+              const today = getLocalDateString();
+              addMins(today, minsToSave);
+              updateTaskDuration(activeTaskId, minsToSave);
+              setTimerLastSavedChunks(chunks);
+            }
+          }
         }
 
         if (remaining <= 0) {
@@ -106,19 +106,19 @@ export default function Timer() {
           if (timerInitialMins && timerInitialMins > 0) {
             const today = getLocalDateString();
             if (activeTaskId) {
-               const elapsedSeconds = timerInitialMins * 60;
-               const finalUnsavedSeconds = elapsedSeconds - (timerLastSavedChunks * 600);
-               const finalUnsavedMins = Math.round(finalUnsavedSeconds / 60);
-               if (finalUnsavedMins > 0) {
-                 addMins(today, finalUnsavedMins);
-                 updateTaskDuration(activeTaskId, finalUnsavedMins);
-               }
-               setActiveTask(null, null);
-               setTimerLastSavedChunks(0);
+              const elapsedSeconds = timerInitialMins * 60;
+              const finalUnsavedSeconds = elapsedSeconds - (timerLastSavedChunks * 600);
+              const finalUnsavedMins = Math.round(finalUnsavedSeconds / 60);
+              if (finalUnsavedMins > 0) {
+                addMins(today, finalUnsavedMins);
+                updateTaskDuration(activeTaskId, finalUnsavedMins);
+              }
+              setActiveTask(null, null);
+              setTimerLastSavedChunks(0);
             } else {
-               addMins(today, timerInitialMins);
+              addMins(today, timerInitialMins);
             }
-            setTimerInitialMins(null); 
+            setTimerInitialMins(null);
           }
 
           // Show quote popup
@@ -219,7 +219,7 @@ export default function Timer() {
   const openEditor = () => {
     if (timerEndAt || isAlarmPlaying) return;
     const h = Math.floor(localTimeLeft / 3600);
-    const m = Math.floor((localTimeLeft % 3600) / 60) || 25; 
+    const m = Math.floor((localTimeLeft % 3600) / 60) || 25;
     setEditHours(h.toString().padStart(2, '0'));
     setEditMins(m.toString().padStart(2, '0'));
     setIsEditingTime(true);
@@ -229,7 +229,7 @@ export default function Timer() {
     const h = parseInt(editHours) || 0;
     const m = parseInt(editMins) || 0;
     const newRemaining = h * 3600 + m * 60;
-    
+
     if (timerInitialMins) {
       const oldElapsed = (timerInitialMins * 60) - localTimeLeft;
       setTimerInitialMins(Math.max(0, Math.round((oldElapsed + newRemaining) / 60)));
@@ -255,9 +255,9 @@ export default function Timer() {
         {/* Timer Display / Editor */}
         <div className="text-center min-h-[80px] flex flex-col items-center justify-center relative">
           {activeTaskTitle && (
-            <div className="w-full max-w-[200px] mb-3 text-xs font-medium text-blue-200 flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-2xl shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-              <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse mt-1 self-start"></span>
-              <span className="break-words whitespace-normal text-center leading-snug">{activeTaskTitle}</span>
+            <div className="w-full max-w-[220px] mb-3 text-sm font-bold text-white flex items-center justify-center gap-2 bg-blue-600/50 backdrop-blur-md border border-blue-400/50 px-2 py-2 rounded-2xl shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+              <span className="shrink-0 w-2 h-2 rounded-full bg-blue-200 animate-pulse mt-[5px] self-start"></span>
+              <span className="break-words whitespace-normal text-center leading-snug drop-shadow-md">{activeTaskTitle}</span>
             </div>
           )}
           {isEditingTime ? (

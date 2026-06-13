@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useDashboardStore } from '@/store/dashboardStore';
-import { Plus, Play, Trash2, CheckCircle, Circle, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Play, Trash2, CheckCircle, Circle, Clock } from 'lucide-react';
 import { fetchQuote } from '@/utils/quoteEngine';
 import DraggableWidget from './DraggableWidget';
 
@@ -46,11 +46,27 @@ export default function TaskManager() {
         setNewTaskTitle('');
     };
 
+    const totalRemainingMinutes = tasks.filter(t => !t.completed).reduce((sum, t) => sum + (t.duration || 0), 0);
+    const formatRemainingTime = (mins: number) => {
+        if (mins < 60) return `${mins}m left`;
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return m > 0 ? `${h}h ${m}m left` : `${h}h left`;
+    };
+
     return (
         <DraggableWidget id="tasks">
             <div className="w-80 rounded-3xl bg-white/10 backdrop-blur-3xl border border-white/20 shadow-2xl flex flex-col overflow-hidden text-white pointer-events-auto">
-                <div className="p-4 border-b border-white/10 bg-black/10">
-                    <h2 className="text-lg font-medium text-center tracking-wide cursor-grab active:cursor-grabbing">Tasks</h2>
+                <div className="p-4 border-b border-white/10 bg-black/10 relative flex items-center justify-center">
+                    <h2 className="text-lg font-medium text-center tracking-wide cursor-grab active:cursor-grabbing w-full">Tasks</h2>
+                    {totalRemainingMinutes > 0 && (
+                        <div 
+                            className="absolute right-3 text-xs font-bold tracking-wider uppercase bg-blue-600/90 text-white border border-blue-400/50 px-3 py-1.5 rounded-xl pointer-events-none flex items-center gap-1.5 shadow-lg backdrop-blur-md"
+                        >
+                            <Clock size={14} className="mb-[1px] text-blue-200" />
+                            {formatRemainingTime(totalRemainingMinutes)}
+                        </div>
+                    )}
                 </div>
 
                 <div className="relative flex-1 overflow-hidden flex flex-col">
@@ -74,7 +90,7 @@ export default function TaskManager() {
                                         <button onClick={() => handleToggleTask(task.id)} className="shrink-0 text-white/60 hover:text-white transition-colors">
                                             {task.completed ? <CheckCircle size={20} className="text-green-400" /> : <Circle size={20} />}
                                         </button>
-                                        <div className="flex flex-col flex-1 min-w-0 w-full">
+                                        <div className="flex flex-col gap-1.5 flex-1 min-w-0 w-full">
                                             <span className={`whitespace-normal break-words text-sm leading-snug ${task.completed ? 'line-through' : ''}`}>
                                                 {task.title}
                                             </span>
@@ -88,7 +104,7 @@ export default function TaskManager() {
                                                             if (!isNaN(dur)) editTaskDuration(task.id, dur);
                                                         }
                                                     }}
-                                                    className="text-xs font-medium text-white/90 bg-blue-500/40 hover:bg-blue-500/60 cursor-pointer px-2.5 py-0.5 rounded-full w-fit mt-1 border border-white/20 transition-colors"
+                                                    className="text-xs font-semibold tracking-wide text-white/90 bg-blue-500/40 hover:bg-blue-500/60 cursor-pointer px-2.5 py-0.5 rounded-full w-fit border border-blue-400/30 transition-colors shadow-sm"
                                                     title="Click to edit duration"
                                                 >
                                                     {task.duration >= 60 ? Math.floor(task.duration / 60) + "h " + (task.duration % 60) + "m left" : task.duration + "m left"}
