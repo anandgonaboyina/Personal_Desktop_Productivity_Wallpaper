@@ -16,23 +16,34 @@ if %errorLevel% == 0 (
 :: Ensure we are in the script's directory
 cd /d "%~dp0"
 
-echo =======================================================
-echo      PRODUCTIVE DASHBOARD - SYSTEM UPDATER
-echo =======================================================
+echo ============================================================================
+echo.
+echo      ___  _  _  ___  _  _  ___     _  _  _  _  __  __  ___  ___ 
+echo     / _ \^| \^| ^|/ _ \^| \^| ^|^|   \   ^| ^|/ /^| ^|^| ^|^|  \/  ^|/ _ \^| _ \ 
+echo    ^|  _  ^| .  ^|  _  ^| .  ^|^| ^|) ^|  ^|   ^< ^| \/ ^|^| ^|\/^| ^|  _  ^|   / 
+echo    ^|_^| ^|_^|_^|\_^|_^| ^|_^|_^|\_^|^|___/   ^|_^|\_\ \__/ ^|_^|  ^|_^|_^| ^|_^|_^|_\ 
+echo.
+echo     "Forged from the pain of wasted days and lost potential."
+echo     "Built to enforce discipline, reclaim focus, and ensure"
+echo     "that every single hour builds a powerful future."
+echo.
+echo ============================================================================
+echo                   PRODUCTIVE DASHBOARD - SYSTEM UPDATER
+echo ============================================================================
 echo.
 
-echo [1/4] STOPPING BACKGROUND SERVER...
+echo [1/3] STOPPING BACKGROUND SERVER...
 call npx -y kill-port 4321
 echo Server stopped.
 
 echo.
-echo [2/4] PULLING LATEST UPDATE FROM GITHUB...
+echo [2/3] PULLING LATEST UPDATE FROM GITHUB...
 call git fetch origin
 call git reset --hard origin/main
 echo Update pulled successfully.
 
 echo.
-echo [3/4] REBUILDING DASHBOARD SOURCE CODE...
+echo [3/3] REBUILDING DASHBOARD SOURCE CODE...
 call npm run build
 if %errorLevel% neq 0 (
     color 0C
@@ -46,9 +57,12 @@ if %errorLevel% neq 0 (
 )
 
 echo.
-echo [4/4] STARTING DASHBOARD SERVER...
 echo =======================================================
-echo UPDATE COMPLETE! 
-echo The updated server is starting. You can close this window once it says "Ready".
+echo UPDATE COMPLETE AND BUILT SUCCESSFULLY!
 echo =======================================================
-call npm run start
+echo The server is currently offline. 
+echo PLEASE RESTART YOUR PC NOW to start the updated dashboard.
+echo.
+echo This window will close automatically in 10 seconds...
+timeout /t 10 >nul
+exit /b 0

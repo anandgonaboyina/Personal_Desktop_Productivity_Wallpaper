@@ -36,6 +36,8 @@ export default function SettingsModal() {
   const [updateAvailable, setUpdateAvailable] = useState<boolean>(false);
   const [updateMessage, setUpdateMessage] = useState<{ success: boolean; text: string; isConflict?: boolean } | null>(null);
   const [changelog, setChangelog] = useState<string[]>([]);
+  const [updateConfirmText, setUpdateConfirmText] = useState('');
+  const [donationAmount, setDonationAmount] = useState<number | null>(100);
 
   const handleCheckUpdate = async () => {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -47,6 +49,7 @@ export default function SettingsModal() {
     setUpdateMessage(null);
     setUpdateAvailable(false);
     setChangelog([]);
+    setUpdateConfirmText('');
     try {
       const res = await fetch('/api/update', { 
         method: 'POST',
@@ -1069,14 +1072,21 @@ export default function SettingsModal() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 blur-3xl rounded-full" />
                     <h3 className="text-xl font-bold mb-2">Support the Project ❤️</h3>
                     <p className="text-sm text-white/60 max-w-md mx-auto mb-6">
-                      If you find this dashboard useful and want to support further development, 
-                      consider buying me a coffee!
+                      It took a lot of effort and time to build and maintain this. Consider supporting by leaving a payment message so I know who it works well for!
                     </p>
+
+                    <div className="flex flex-wrap justify-center gap-3 mb-6">
+                      <button onClick={() => setDonationAmount(50)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${donationAmount === 50 ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 scale-105 shadow-lg shadow-pink-500/20' : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'}`}>₹50 (Coffee)</button>
+                      <button onClick={() => setDonationAmount(100)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${donationAmount === 100 ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 scale-105 shadow-lg shadow-pink-500/20' : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'}`}>₹100 (Lunch)</button>
+                      <button onClick={() => setDonationAmount(200)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${donationAmount === 200 ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 scale-105 shadow-lg shadow-pink-500/20' : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'}`}>₹200 (Book)</button>
+                      <button onClick={() => setDonationAmount(500)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${donationAmount === 500 ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 scale-105 shadow-lg shadow-pink-500/20' : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'}`}>₹500 (Server Funds)</button>
+                      <button onClick={() => setDonationAmount(null)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${donationAmount === null ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 scale-105 shadow-lg shadow-pink-500/20' : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'}`}>Any Amount</button>
+                    </div>
                     
                     <div className="flex flex-col sm:flex-row items-center gap-8 bg-white/5 p-6 rounded-2xl border border-white/10">
                       <div className="bg-white p-3 rounded-2xl shadow-xl hover:scale-105 transition-transform">
                         <QRCodeSVG 
-                          value={`upi://pay?pa=${upiId}&pn=Anand%20Kumar&cu=INR`} 
+                          value={`upi://pay?pa=${upiId}&pn=Anand%20Kumar&cu=INR${donationAmount ? `&am=${donationAmount}` : ''}`} 
                           size={130} 
                           level="H"
                           includeMargin={false}
@@ -1086,7 +1096,7 @@ export default function SettingsModal() {
                       <div className="flex flex-col text-left gap-3 max-w-[200px]">
                         <div>
                           <p className="text-xs text-white/50 uppercase tracking-widest font-semibold mb-1">Scan to Pay</p>
-                          <p className="font-bold text-lg text-white">Any Amount</p>
+                          <p className="font-bold text-lg text-white">{donationAmount ? `₹${donationAmount}` : 'Any Amount'}</p>
                         </div>
                         <div className="h-px w-full bg-white/10 my-1" />
                         <div>
@@ -1133,10 +1143,36 @@ export default function SettingsModal() {
                       </p>
                     </div>
 
+                    {updateAvailable && (
+                      <div className="w-full flex flex-col gap-3 mt-4 bg-red-500/10 border border-red-500/30 p-5 rounded-xl">
+                        <div className="flex items-start gap-3 text-left">
+                          <AlertTriangle size={20} className="text-red-400 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-bold text-red-400 mb-1">
+                              WARNING: This update requires a system restart!
+                            </p>
+                            <p className="text-xs text-white/70 mb-3 leading-relaxed">
+                              Applying this update will temporarily stop your server in the background to safely rebuild the source code. You <strong>must restart your PC</strong> afterward to start the dashboard again.
+                            </p>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs font-semibold text-white/50 uppercase tracking-widest whitespace-nowrap">Type 'restart' to confirm:</span>
+                              <input 
+                                type="text" 
+                                value={updateConfirmText}
+                                onChange={(e) => setUpdateConfirmText(e.target.value)}
+                                placeholder="restart" 
+                                className="w-full max-w-[120px] bg-black/40 border border-white/20 rounded-lg px-3 py-1.5 text-sm font-bold text-white focus:border-red-500 outline-none transition-colors"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <button
                       onClick={updateAvailable ? handleApplyUpdate : handleCheckUpdate}
-                      disabled={isUpdating}
-                      className={`mt-2 flex items-center gap-2 ${updateAvailable ? 'bg-green-600 hover:bg-green-500 shadow-green-500/20 hover:shadow-green-500/40' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20 hover:shadow-blue-500/40'} disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl transition-all font-bold shadow-lg`}
+                      disabled={isUpdating || (updateAvailable && updateConfirmText.toLowerCase() !== 'restart')}
+                      className={`mt-4 flex items-center gap-2 ${updateAvailable ? 'bg-green-600 hover:bg-green-500 shadow-green-500/20 hover:shadow-green-500/40' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20 hover:shadow-blue-500/40'} disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl transition-all font-bold shadow-lg`}
                     >
                       {isUpdating ? (
                         <>
@@ -1146,7 +1182,7 @@ export default function SettingsModal() {
                       ) : (
                         <>
                           <Download size={18} />
-                          {updateAvailable ? 'Update Now' : 'Check for Updates'}
+                          {updateAvailable ? 'Confirm & Update Now' : 'Check for Updates'}
                         </>
                       )}
                     </button>
