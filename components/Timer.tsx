@@ -4,6 +4,7 @@ import { Play, Pause, Square, VolumeX, Check, ListTodo, ChevronUp, ChevronDown, 
 import { useDashboardStore } from '@/store/dashboardStore';
 import { fetchQuote } from '@/utils/quoteEngine';
 import { getLocalDateString } from '@/utils/date';
+import DraggableWidget from './DraggableWidget';
 
 export default function Timer() {
   const {
@@ -18,7 +19,8 @@ export default function Timer() {
     isAlarmPlaying, setIsAlarmPlaying,
     addMins,
     showQuotePopup, isHidden,
-    activeTaskId, activeTaskTitle, setActiveTask, updateTaskDuration
+    activeTaskId, activeTaskTitle, setActiveTask, updateTaskDuration,
+    alarmSound, alarmVolume
   } = useDashboardStore();
 
   const [customMins, setCustomMins] = useState('');
@@ -158,9 +160,10 @@ export default function Timer() {
 
   const playAlarm = () => {
     setIsAlarmPlaying(true);
+    const durationSecs = useDashboardStore.getState().alarmDurationSecs || 60;
     setTimeout(() => {
       useDashboardStore.getState().setIsAlarmPlaying(false);
-    }, 25000);
+    }, durationSecs * 1000);
   };
 
   const stopAlarm = () => {
@@ -250,7 +253,8 @@ export default function Timer() {
   };
 
   return (
-    <div className="relative pointer-events-auto">
+    <DraggableWidget id="timer">
+    <div className="relative pointer-events-auto select-none">
       <div className="w-64 rounded-3xl bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl p-3 text-white flex flex-col gap-2">
         {/* Timer Display / Editor */}
         <div className="text-center min-h-[80px] flex flex-col items-center justify-center relative">
@@ -376,56 +380,9 @@ export default function Timer() {
         )}
 
         {/* Hidden Audio Element */}
-        {isAlarmPlaying && <audio src="/ringtones/alarm.mp3" loop autoPlay />}
-      </div>
-
-      {/* Right Side Control Buttons Group 
-          You can easily adjust the margin/placement here!
-          To move it down, remove `top-1/2 -translate-y-1/2` and use `bottom-0 mb-4` 
-      */}
-      <div className="absolute -right-14 top-1/2 -translate-y-1/2 mb-10 flex flex-col gap-3">
-        {/* Plans Toggle Button */}
-        {!isHidden && (
-          <button
-            onClick={togglePlans}
-            className={`p-3 rounded-2xl border border-white/20 shadow-xl transition-all ${isPlansOpen ? 'bg-white/30 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white backdrop-blur-xl'}`}
-            title="Roadmap & Plans"
-          >
-            <Map size={24} />
-          </button>
-        )}
-
-        {/* Task Manager Toggle Button */}
-        {!isHidden && (
-          <button
-            onClick={toggleTaskManager}
-            className={`p-3 rounded-2xl border border-white/20 shadow-xl transition-all ${isTaskManagerOpen ? 'bg-white/30 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white backdrop-blur-xl'}`}
-            title="Toggle Tasks"
-          >
-            <ListTodo size={24} />
-          </button>
-        )}
-
-        {/* Stats Toggle Button */}
-        {!isHidden && (
-          <button
-            onClick={toggleStats}
-            className={`p-3 rounded-2xl border border-white/20 shadow-xl transition-all ${isStatsOpen ? 'bg-white/30 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white backdrop-blur-xl'}`}
-            title="Focus History"
-          >
-            <BarChart2 size={24} />
-          </button>
-        )}
-
-        {/* Notes Toggle Button */}
-        <button
-          onClick={toggleNotes}
-          className={`p-3 rounded-2xl border border-white/20 shadow-xl transition-all ${isNotesOpen ? 'bg-white/30 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white backdrop-blur-xl'}`}
-          title="Quick Notes"
-        >
-          <StickyNote size={24} />
-        </button>
+        {isAlarmPlaying && <audio src={alarmSound} loop autoPlay />}
       </div>
     </div>
+    </DraggableWidget>
   );
 }
