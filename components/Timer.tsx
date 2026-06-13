@@ -251,7 +251,7 @@ export default function Timer() {
 
   return (
     <div className="relative pointer-events-auto">
-      <div className="w-64 rounded-3xl bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl p-4 text-white flex flex-col gap-3">
+      <div className="w-64 rounded-3xl bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl p-3 text-white flex flex-col gap-2">
         {/* Timer Display / Editor */}
         <div className="text-center min-h-[80px] flex flex-col items-center justify-center relative">
           {activeTaskTitle && (
@@ -260,48 +260,65 @@ export default function Timer() {
               <span className="break-words whitespace-normal text-center leading-snug drop-shadow-md">{activeTaskTitle}</span>
             </div>
           )}
-          {isEditingTime ? (
-            <div className="flex items-center justify-center gap-2">
-              <div className="flex flex-col items-center">
-                <button onClick={() => adjustEditTime('h', 1)} className="hover:text-white/60 p-1"><ChevronUp size={20} /></button>
-                <input
-                  type="number"
-                  value={editHours}
-                  onChange={(e) => setEditHours(e.target.value.padStart(2, '0'))}
-                  onKeyDown={(e) => e.key === 'Enter' && saveEditor()}
-                  className="w-16 bg-transparent text-5xl font-light tabular-nums text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none selection:bg-white/20"
-                  min="0"
-                  max="99"
-                />
-                <button onClick={() => adjustEditTime('h', -1)} className="hover:text-white/60 p-1"><ChevronDown size={20} /></button>
+          <div className="flex items-center justify-center w-full relative">
+            {/* Quick Presets Right */}
+            {!timerEndAt && !timerPausedLeft && localTimeLeft === 0 && !isEditingTime && (
+              <div className="absolute right-1 top-1/2 mt-[20px] ml-[5px] -translate-y-1/2 flex flex-col gap-1.5">
+                {[5, 15, 25].map((preset) => (
+                  <button
+                    key={preset}
+                    onClick={() => startTimer(preset * 60)}
+                    className="w-10 py-1 text-xs bg-white/5 hover:bg-white/20 rounded-lg transition-colors border border-white/10 font-medium"
+                  >
+                    {preset}m
+                  </button>
+                ))}
               </div>
-              <span className="text-5xl font-light opacity-50 mb-0">:</span>
-              <div className="flex flex-col items-center">
-                <button onClick={() => adjustEditTime('m', 1)} className="hover:text-white/60 p-1"><ChevronUp size={20} /></button>
-                <input
-                  type="number"
-                  value={editMins}
-                  onChange={(e) => setEditMins(e.target.value.padStart(2, '0'))}
-                  onKeyDown={(e) => e.key === 'Enter' && saveEditor()}
-                  className="w-16 bg-transparent text-5xl font-light tabular-nums text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none selection:bg-white/20"
-                  min="0"
-                  max="59"
-                />
-                <button onClick={() => adjustEditTime('m', -1)} className="hover:text-white/60 p-1"><ChevronDown size={20} /></button>
+            )}
+
+            {isEditingTime ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="flex flex-col items-center">
+                  <button onClick={() => adjustEditTime('h', 1)} className="hover:text-white/60 p-1"><ChevronUp size={20} /></button>
+                  <input
+                    type="number"
+                    value={editHours}
+                    onChange={(e) => setEditHours(e.target.value.padStart(2, '0'))}
+                    onKeyDown={(e) => e.key === 'Enter' && saveEditor()}
+                    className="w-16 bg-transparent text-5xl font-light tabular-nums text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none selection:bg-white/20"
+                    min="0"
+                    max="99"
+                  />
+                  <button onClick={() => adjustEditTime('h', -1)} className="hover:text-white/60 p-1"><ChevronDown size={20} /></button>
+                </div>
+                <span className="text-5xl font-light opacity-50 mb-0">:</span>
+                <div className="flex flex-col items-center">
+                  <button onClick={() => adjustEditTime('m', 1)} className="hover:text-white/60 p-1"><ChevronUp size={20} /></button>
+                  <input
+                    type="number"
+                    value={editMins}
+                    onChange={(e) => setEditMins(e.target.value.padStart(2, '0'))}
+                    onKeyDown={(e) => e.key === 'Enter' && saveEditor()}
+                    className="w-16 bg-transparent text-5xl font-light tabular-nums text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none selection:bg-white/20"
+                    min="0"
+                    max="59"
+                  />
+                  <button onClick={() => adjustEditTime('m', -1)} className="hover:text-white/60 p-1"><ChevronDown size={20} /></button>
+                </div>
+                <button onClick={saveEditor} className="ml-1 p-2 bg-blue-500/80 hover:bg-blue-500 rounded-xl transition-colors">
+                  <Check size={20} />
+                </button>
               </div>
-              <button onClick={saveEditor} className="ml-1 p-2 bg-blue-500/80 hover:bg-blue-500 rounded-xl transition-colors">
-                <Check size={20} />
-              </button>
-            </div>
-          ) : (
-            <div
-              onClick={openEditor}
-              className={`text-5xl font-light tracking-widest tabular-nums drop-shadow-md transition-opacity ${!timerEndAt && !isAlarmPlaying ? 'cursor-pointer hover:opacity-80' : ''}`}
-              title={!timerEndAt && !isAlarmPlaying ? "Click to set time" : ""}
-            >
-              {formatTime(localTimeLeft)}
-            </div>
-          )}
+            ) : (
+              <div
+                onClick={openEditor}
+                className={`text-5xl font-light tracking-widest tabular-nums drop-shadow-md transition-opacity ${!timerEndAt && !isAlarmPlaying ? 'cursor-pointer hover:opacity-80' : ''}`}
+                title={!timerEndAt && !isAlarmPlaying ? "Click to set time" : ""}
+              >
+                {formatTime(localTimeLeft)}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Alarm State */}
@@ -335,37 +352,24 @@ export default function Timer() {
               </div>
             )}
 
-            {/* Quick Presets & Custom */}
+            {/* Custom Input */}
             {!timerEndAt && !timerPausedLeft && localTimeLeft === 0 && !isEditingTime && (
-              <div className="flex flex-col gap-2 mt-1">
-                <div className="flex justify-between gap-2">
-                  {[5, 15, 25].map((preset) => (
-                    <button
-                      key={preset}
-                      onClick={() => startTimer(preset * 60)}
-                      className="flex-1 py-1 text-sm bg-white/5 hover:bg-white/20 rounded-lg transition-colors border border-white/10 font-medium"
-                    >
-                      {preset}m
-                    </button>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Custom mins..."
-                    value={customMins}
-                    onChange={(e) => setCustomMins(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleCustomStart()}
-                    className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-sm outline-none focus:bg-white/10 transition-colors placeholder:text-white/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    min="1"
-                  />
-                  <button
-                    onClick={handleCustomStart}
-                    className="px-3 py-1 bg-blue-500/60 hover:bg-blue-500/80 rounded-lg text-sm font-medium transition-colors shrink-0"
-                  >
-                    Set
-                  </button>
-                </div>
+              <div className="flex gap-2 mt-1">
+                <input
+                  type="number"
+                  placeholder="Custom mins..."
+                  value={customMins}
+                  onChange={(e) => setCustomMins(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCustomStart()}
+                  className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-sm outline-none focus:bg-white/10 transition-colors placeholder:text-white/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  min="1"
+                />
+                <button
+                  onClick={handleCustomStart}
+                  className="px-3 py-1 bg-blue-500/60 hover:bg-blue-500/80 rounded-lg text-sm font-medium transition-colors shrink-0"
+                >
+                  Set
+                </button>
               </div>
             )}
           </>

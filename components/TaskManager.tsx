@@ -84,7 +84,7 @@ export default function TaskManager() {
                                 {tasks.map((task) => (
                                     <div
                                         key={task.id}
-                                        className={`group flex items-start justify-between p-3 rounded-2xl border border-transparent hover:border-white/10 hover:bg-white/5 transition-all ${task.completed ? 'opacity-50' : ''}`}
+                                        className={`group flex items-start justify-between p-3 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10 transition-all shadow-sm ${task.completed ? 'opacity-50' : ''}`}
                                     >
                                         <div className="flex items-start gap-3 flex-1 min-w-0">
                                             <button onClick={() => handleToggleTask(task.id)} className="shrink-0 text-white/60 hover:text-white transition-colors">

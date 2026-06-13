@@ -8,7 +8,19 @@ export default function MiniCalendar() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showAllDeadlines, setShowAllDeadlines] = useState(false);
   
-  const { deadlines, addDeadline, updateDeadline, deleteDeadline } = useDashboardStore();
+  const { deadlines, addDeadline, updateDeadline, deleteDeadline, deleteAllDeadlinesForDay } = useDashboardStore();
+  
+  const handleCloseDate = () => {
+    // Cleanup empty deadlines before closing
+    if (selectedDate) {
+      deadlines.forEach(d => {
+        if (d.date === selectedDate && !d.text.trim()) {
+          deleteDeadline(d.id);
+        }
+      });
+    }
+    setSelectedDate(null);
+  };
   
   const today = new Date();
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
@@ -56,14 +68,25 @@ export default function MiniCalendar() {
         </div>
       ) : selectedDate ? (
         <div className="flex flex-col h-full flex-1 animate-in slide-in-from-bottom-4 duration-300">
-          <div className="flex items-center mb-4 pb-2 border-b border-white/10">
-            <button onClick={() => setSelectedDate(null)} className="p-1 hover:bg-white/10 rounded-lg text-white/70 transition-colors">
-              <ChevronLeft size={18} />
-            </button>
-            <div className="flex flex-col ml-2">
-              <span className="text-white font-medium text-sm">Deadlines for</span>
-              <span className="text-red-400 text-xs font-bold tracking-wider">{selectedDate}</span>
+          <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
+            <div className="flex items-center">
+              <button onClick={handleCloseDate} className="p-1 hover:bg-white/10 rounded-lg text-white/70 transition-colors">
+                <ChevronLeft size={18} />
+              </button>
+              <div className="flex flex-col ml-2">
+                <span className="text-white font-medium text-sm">Deadlines for</span>
+                <span className="text-red-400 text-xs font-bold tracking-wider">{selectedDate}</span>
+              </div>
             </div>
+            {dayDeadlines.length > 0 && (
+              <button 
+                onClick={() => { if(confirm('Delete all deadlines for this day?')) deleteAllDeadlinesForDay(selectedDate); }}
+                className="p-1.5 text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                title="Delete all"
+              >
+                <Trash size={16} />
+              </button>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto space-y-2 pr-2 arrow-scrollbar max-h-[220px]">
             {dayDeadlines.length === 0 && <div className="text-white/40 text-xs text-center my-2">No deadlines set for this day.</div>}
@@ -74,6 +97,7 @@ export default function MiniCalendar() {
                   type="text"
                   value={d.text} 
                   onChange={e => updateDeadline(d.id, e.target.value)}
+                  onBlur={() => { if (!d.text.trim()) deleteDeadline(d.id); }}
                   className="flex-1 bg-transparent outline-none text-white/90 text-sm h-8 leading-tight placeholder:text-white/30 border-b border-transparent focus:border-white/20 transition-colors"
                   placeholder="Enter deadline here..."
                   autoFocus
@@ -83,9 +107,11 @@ export default function MiniCalendar() {
                 </button>
               </div>
             ))}
+          </div>
+          <div className="mt-2 pt-2 border-t border-white/10">
             <button 
                onClick={() => addDeadline(selectedDate, "")}
-               className="w-full py-2.5 mt-2 flex items-center justify-center gap-1.5 text-xs font-bold text-white/70 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl transition-all border border-dashed border-white/20 hover:border-white/40"
+               className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-bold text-white/70 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl transition-all border border-dashed border-white/20 hover:border-white/40"
             >
               <Plus size={14} /> ADD DEADLINE
             </button>

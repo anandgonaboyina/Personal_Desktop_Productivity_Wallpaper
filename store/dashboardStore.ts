@@ -91,6 +91,7 @@ interface DashboardState {
   timerPausedLeft: number | null; // Keeps track of remaining time if paused
   timerInitialMins: number | null;
   timerLastSavedChunks: number;
+  timerLastUpdated: number;
   isAlarmPlaying: boolean;
   setTimerEndAt: (time: number | null) => void;
   setTimerPausedLeft: (time: number | null) => void;
@@ -139,6 +140,7 @@ interface DashboardState {
   addDeadline: (date: string, text: string) => void;
   updateDeadline: (id: string, text: string) => void;
   deleteDeadline: (id: string) => void;
+  deleteAllDeadlinesForDay: (date: string) => void;
 
   // Timetable
   timetableGrid: TimetableGrid;
@@ -332,10 +334,11 @@ export const useDashboardStore = create<DashboardState>()(
       timerPausedLeft: null,
       timerInitialMins: null,
       timerLastSavedChunks: 0,
+      timerLastUpdated: 0,
       isAlarmPlaying: false,
-      setTimerEndAt: (time) => set({ timerEndAt: time }),
-      setTimerPausedLeft: (time) => set({ timerPausedLeft: time }),
-      setTimerInitialMins: (mins) => set({ timerInitialMins: mins }),
+      setTimerEndAt: (time) => set({ timerEndAt: time, timerLastUpdated: Date.now() }),
+      setTimerPausedLeft: (time) => set({ timerPausedLeft: time, timerLastUpdated: Date.now() }),
+      setTimerInitialMins: (mins) => set({ timerInitialMins: mins, timerLastUpdated: Date.now() }),
       setTimerLastSavedChunks: (chunks) => set({ timerLastSavedChunks: chunks }),
       setIsAlarmPlaying: (playing) => set({ isAlarmPlaying: playing }),
 
@@ -436,6 +439,9 @@ export const useDashboardStore = create<DashboardState>()(
       })),
       deleteDeadline: (id) => set((state) => ({
         deadlines: state.deadlines.filter(d => d.id !== id)
+      })),
+      deleteAllDeadlinesForDay: (date) => set((state) => ({
+        deadlines: state.deadlines.filter(d => d.date !== date)
       })),
 
       // Timetable
@@ -644,14 +650,19 @@ export const useDashboardStore = create<DashboardState>()(
           persistedState.activeTaskTitle = null;
         }
         
-        // If the user quickly started a new timer before hydration finished, keep their new timer!
-        if (currentState.timerEndAt) {
+        // Conflict resolution: The most recently updated timer state always wins.
+        // This prevents a polling tab from reviving a stopped timer from its own stale state.
+        const currentUpdated = currentState.timerLastUpdated || 0;
+        const persistedUpdated = persistedState.timerLastUpdated || 0;
+        
+        if (currentUpdated > persistedUpdated) {
           persistedState.timerEndAt = currentState.timerEndAt;
           persistedState.timerPausedLeft = currentState.timerPausedLeft;
           persistedState.timerInitialMins = currentState.timerInitialMins;
           persistedState.activeTaskId = currentState.activeTaskId;
           persistedState.activeTaskTitle = currentState.activeTaskTitle;
           persistedState.timerLastSavedChunks = currentState.timerLastSavedChunks;
+          persistedState.timerLastUpdated = currentState.timerLastUpdated;
         }
 
         return { ...currentState, ...persistedState };

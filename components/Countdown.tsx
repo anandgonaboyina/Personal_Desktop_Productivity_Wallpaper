@@ -88,9 +88,10 @@ export default function Countdown({ id }: { id: string }) {
         </div>
         <button
           onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-          className="text-white/40 hover:text-white transition-colors"
+          className={`p-2 rounded-xl transition-all border ${isEditing ? 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20 hover:border-green-500/50' : 'bg-white/5 border-white/10 hover:bg-white/15 hover:border-white/20'}`}
+          title={isEditing ? "Save Target" : "Edit Target"}
         >
-          {isEditing ? <Check size={16} className="text-green-400" /> : <Edit2 size={16} />}
+          {isEditing ? <Check size={20} className="text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]" /> : <Edit2 size={18} className="text-white/80" />}
         </button>
       </div>
 
