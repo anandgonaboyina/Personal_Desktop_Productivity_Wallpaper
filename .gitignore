@@ -50,3 +50,10 @@ dev.db-journal
 start.vbs
 start-server.vbs
 start-lively.vbs
+
+# User uploaded media
+public/thumbnails/
+public/wallpapers/
+
+# Zips and archives
+*.zip
