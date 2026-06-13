@@ -3,6 +3,7 @@
 import Dock from "@/components/Navbar";
 import BigClock from "@/components/BigClock";
 import Timer from "@/components/Timer";
+import Stopwatch from "@/components/Stopwatch";
 import TaskManager from "@/components/TaskManager";
 import QuotePopup from "@/components/QuotePopup";
 import StatsModal from "@/components/StatsModal";
@@ -16,6 +17,7 @@ import HealthModal from "@/components/HealthModal";
 import DraggableClock from "@/components/DraggableClock";
 import DraggableWidget from "@/components/DraggableWidget";
 import SettingsModal from "@/components/SettingsModal";
+import RightToolbar from "@/components/RightToolbar";
 import DeadlineAlerts from "@/components/DeadlineAlerts";
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, CalendarDays, Settings } from "lucide-react";
@@ -25,6 +27,7 @@ import { fetchQuote } from "@/utils/quoteEngine";
 export default function Dashboard() {
   const showQuotePopup = useDashboardStore((state) => state.showQuotePopup);
   const isHidden = useDashboardStore((state) => state.isHidden);
+  const hideConfig = useDashboardStore((state) => state.hideConfig);
   const toggleHide = useDashboardStore((state) => state.toggleHide);
   const currentBgType = useDashboardStore((state) => state.currentBgType);
   const countdowns = useDashboardStore((state) => state.countdowns);
@@ -35,21 +38,50 @@ export default function Dashboard() {
   const showHealth = useDashboardStore((state) => state.showHealth);
   const showQuote = useDashboardStore((state) => state.showQuote);
   const showTimer = useDashboardStore((state) => state.showTimer);
+  const showStopwatch = useDashboardStore((state) => state.showStopwatch);
   const showCountdowns = useDashboardStore((state) => state.showCountdowns);
   const showClock = useDashboardStore((state) => state.showClock);
   const showTasks = useDashboardStore((state) => state.showTasks);
   const showCalendar = useDashboardStore((state) => state.showCalendar);
+  const showStats = useDashboardStore((state) => state.showStats);
+  const showPlans = useDashboardStore((state) => state.showPlans);
+  const showNotes = useDashboardStore((state) => state.showNotes);
+  const showTimetable = useDashboardStore((state) => state.showTimetable);
+  const showDock = useDashboardStore((state) => state.showDock);
+  const showDeadlineAlerts = useDashboardStore((state) => state.showDeadlineAlerts);
+  const showBgSwitcher = useDashboardStore((state) => state.showBgSwitcher);
+  const showSettingsBtn = useDashboardStore((state) => state.showSettingsBtn);
+  const rightWidgetsOffset = useDashboardStore((state) => state.rightWidgetsOffset);
+  const cycleBackground = useDashboardStore((state) => state.cycleBackground);
+  const toggleSettings = useDashboardStore((state) => state.toggleSettings);
+  const _hasHydrated = useDashboardStore((state) => state._hasHydrated);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key.toLowerCase() === 'h') {
+      const isFullPanic = Object.values(hideConfig).every(v => v === true);
+
+      // Ctrl + Shift + H (Force unhide)
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'h') {
         e.preventDefault();
-        toggleHide();
+        if (isHidden) toggleHide();
+        return;
+      }
+
+      // Ctrl + H (Normal toggle)
+      if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        if (!isHidden) {
+          // Always allow hiding
+          toggleHide();
+        } else if (!isFullPanic) {
+          // If hidden, only allow unhiding with Ctrl+H if NOT in full panic mode
+          toggleHide();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleHide]);
+  }, [toggleHide, isHidden, hideConfig]);
 
   useEffect(() => {
     // Show initial quote after 5 seconds of loading the dashboard
@@ -90,28 +122,38 @@ export default function Dashboard() {
     return () => clearInterval(syncInterval);
   }, []);
 
+  if (!_hasHydrated) {
+    return (
+      <div className="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center text-white/50 font-mono">
+        <div className="w-8 h-8 border-4 border-white/10 border-t-blue-500 rounded-full animate-spin mb-4" />
+        <div className="text-sm tracking-widest uppercase">Connecting to Database...</div>
+      </div>
+    );
+  }
+
   return (
     <main className="relative overflow-hidden w-full flex-1">
-      <DeadlineAlerts />
+      {(!isHidden || !hideConfig.deadlineAlerts) && showDeadlineAlerts && <DeadlineAlerts />}
       {/* Quote Popup */}
-      {!isHidden && showQuote && <QuotePopup />}
+      {(!isHidden || !hideConfig.quote) && showQuote && <QuotePopup />}
 
       {/* Stats Modal */}
-      {!isHidden && <StatsModal />}
+      {(!isHidden || !hideConfig.stats) && showStats && <StatsModal />}
 
       {/* Health Modal */}
-      <HealthModal />
+      {(!isHidden || !hideConfig.health) && showHealth && <HealthModal />}
 
       {/* Quick Notes */}
-      <NotesManager />
+      {(!isHidden || !hideConfig.notes) && showNotes && <NotesManager />}
 
       {/* Roadmap & Plans */}
-      {!isHidden && <PlansManager />}
+      {(!isHidden || !hideConfig.plans) && showPlans && <PlansManager />}
 
       {/* Top Left: Background Switcher */}
+      {(!isHidden || !hideConfig.bgSwitcher) && showBgSwitcher && (
       <div className="absolute top-6 left-4 z-50">
         <button
-          onClick={useDashboardStore((state) => state.cycleBackground)}
+          onClick={cycleBackground}
           className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:bg-white/20 hover:shadow-2xl"
           title="Switch Background"
         >
@@ -122,9 +164,10 @@ export default function Dashboard() {
           </svg>
         </button>
       </div>
+      )}
 
       {/* Top Leftish: Target Countdowns */}
-      {!isHidden && showCountdowns && (
+      {(!isHidden || !hideConfig.countdowns) && showCountdowns && (
         <div className="absolute top-32 right-[320px] z-50">
           <DraggableWidget id="countdowns">
             <div className="flex flex-col gap-4 items-center">
@@ -149,7 +192,7 @@ export default function Dashboard() {
       )}
 
       {/* Top Right: Mini Calendar */}
-      {showCalendar && (
+      {(!isHidden || !hideConfig.calendar) && showCalendar && (
         <div className="absolute top-4 right-4 z-50">
           <MiniCalendar />
         </div>
@@ -158,13 +201,16 @@ export default function Dashboard() {
       {/* Dashboard components will be positioned absolutely within this container */}
 
       {/* BigClock */}
+      {(!isHidden || !hideConfig.clock) && showClock && (
       <div className={`absolute z-[999] pointer-events-none transition-all duration-500 ${currentBgType === 'image' ? 'inset-0 flex items-start mt-40 justify-center' : 'top-40 left-10'}`}>
         <DraggableClock>
           <BigClock />
         </DraggableClock>
       </div>
+      )}
 
       {/* Bottom Center (Above Dock): Timetable */}
+      {(!isHidden || !hideConfig.timetable) && showTimetable && (
       <div className="absolute bottom-40 left-1/2 -translate-x-1/2 z-[50] flex flex-col items-center">
         {isTimetableOpen ? (
           <div className="flex flex-col items-center gap-2">
@@ -185,34 +231,37 @@ export default function Dashboard() {
           </button>
         )}
       </div>
+      )}
 
       {/* Bottom Center: Dock */}
+      {(!isHidden || !hideConfig.dock) && showDock && (
       <div className="absolute bottom-18 left-1/2 -translate-x-1/2 z-50">
         <Dock onOpenNotes={() => console.log('Open Notes clicked')} />
       </div>
+      )}
 
       {/* Bottom Left: Health Rings */}
-      {showHealth && (
+      {(!isHidden || !hideConfig.health) && showHealth && (
         <div className="absolute bottom-12 left-12 z-50">
           <HealthRings />
         </div>
       )}
 
-      {/* Settings Toggle Button */}
-      <div className="absolute bottom-[300px] right-1 z-50">
-        <button
-          onClick={useDashboardStore((state) => state.toggleSettings)}
-          className="p-2 rounded-xl border border-white/20 bg-white/10 text-white/70 hover:bg-white/20 hover:text-white backdrop-blur-xl shadow-xl transition-all hover:scale-110"
-          title="Settings"
-        >
-          <Settings size={18} />
-        </button>
-      </div>
-
-      {/* Bottom Right: TaskManager & Timer */}
-      <div className="absolute bottom-12 right-12 z-50 flex flex-col items-end gap-2">
-        {!isHidden && showTasks && <TaskManager />}
-        {showTimer && <Timer />}
+      {/* Bottom Right Container */}
+      <div className="absolute right-2 z-50 flex items-end transition-all duration-300 pointer-events-none" style={{ bottom: `${rightWidgetsOffset}px` }}>
+        {/* TaskManager & Timer Group */}
+        <div className="flex flex-col items-end gap-2 pointer-events-auto mr-[10px]">
+          {(!isHidden || !hideConfig.tasks) && showTasks && <TaskManager />}
+          <div className="flex flex-row items-start gap-3">
+            {(!isHidden || !hideConfig.stopwatch) && showStopwatch && <Stopwatch />}
+            {(!isHidden || !hideConfig.timer) && showTimer && <Timer />}
+          </div>
+        </div>
+        
+        {/* Vertical Icons Toolbar */}
+        <div className="pointer-events-auto">
+          <RightToolbar />
+        </div>
       </div>
 
       {/* Settings Modal */}

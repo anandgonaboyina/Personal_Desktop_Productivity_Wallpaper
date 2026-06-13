@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useDashboardStore } from '@/store/dashboardStore';
-import { X, Upload, Trash2, Image as ImageIcon, Settings as SettingsIcon, MonitorPlay, Clock, Users, Plus, Eye, EyeOff, Download, UploadCloud, Activity, MessageSquare, Timer as TimerIcon, Hourglass, Film, User, BadgeCheck, Send, Briefcase, Calendar, CheckSquare, Flame, ChevronUp, ChevronDown, Database, Bell, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, Upload, Trash2, Image as ImageIcon, Settings as SettingsIcon, MonitorPlay, Clock, Users, Plus, Eye, EyeOff, Download, UploadCloud, Activity, MessageSquare, Timer as TimerIcon, Hourglass, Film, User, BadgeCheck, Send, Briefcase, Calendar, CheckSquare, Flame, ChevronUp, ChevronDown, Database, Bell, RefreshCw, AlertTriangle, CheckCircle, BarChart2, Map, StickyNote, CalendarDays, Layout } from 'lucide-react';
 
 const DEFAULT_WALLPAPERS = [
   'itachi-uchiha.png', 'kakashi.mp4', 'kakashi2.mp4', 'kakashi3.png',
@@ -11,14 +11,19 @@ const DEFAULT_WALLPAPERS = [
 ];
 
 export default function SettingsModal() {
-  const { isSettingsOpen, toggleSettings, is24HourClock, toggle24HourClock, currentBgSrc, hiddenWallpapers, toggleWallpaperVisibility, showHealth, showQuote, showTimer, showCountdowns, showVideoControls, showClock, showTasks, showCalendar, showTodayWork, toggleVisibility, isSlideshowEnabled, setIsSlideshowEnabled, slideshowIntervalMins, setSlideshowIntervalMins, lockedWidgets, toggleWidgetLock, resetAllOffsets, clearOldData, clearAllData, lockedWallpaper, setLockedWallpaper, deadlineAlertDays, setDeadlineAlertDays } = useDashboardStore();
-  const [activeTab, setActiveTab] = useState<'wallpapers' | 'preferences' | 'profiles' | 'data' | 'about' | 'update'>('wallpapers');
+  const { isSettingsOpen, toggleSettings, is24HourClock, toggle24HourClock, currentBgSrc, hiddenWallpapers, toggleWallpaperVisibility, showHealth, showQuote, showTimer, showCountdowns, showVideoControls, showClock, showTasks, showCalendar, showTodayWork, showStats, showPlans, showNotes, showTimetable, showDock, showDeadlineAlerts, showBgSwitcher, showSettingsBtn, showStopwatch, toggleVisibility, isSlideshowEnabled, setIsSlideshowEnabled, slideshowIntervalMins, setSlideshowIntervalMins, lockedWidgets, toggleWidgetLock, resetAllOffsets, clearOldData, clearAllData, lockedWallpaper, setLockedWallpaper, deadlineAlertDays, setDeadlineAlertDays, hideConfig, setHideConfig, setHideAll, rightWidgetsOffset, setRightWidgetsOffset, alarmSound, setAlarmSound, alarmDurationSecs, setAlarmDurationSecs, alarmVolume, setAlarmVolume } = useDashboardStore();
+  const [activeTab, setActiveTab] = useState<'wallpapers' | 'preferences' | 'profiles' | 'data' | 'about' | 'update' | 'focus' | 'sound'>('wallpapers');
   const [deleteDays, setDeleteDays] = useState<number>(60);
   const upiId = 'gonaboyinaanandkumar@ybl';
 
   const [wallpapers, setWallpapers] = useState<{ type: string, src: string, filename: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [alarms, setAlarms] = useState<string[]>([]);
+  const [isUploadingAlarm, setIsUploadingAlarm] = useState(false);
+  const alarmInputRef = useRef<HTMLInputElement>(null);
+
   const settingsScrollRef = useRef<HTMLDivElement>(null);
 
   const scrollBy = (ref: React.RefObject<HTMLDivElement | null>, direction: 'up' | 'down') => {
@@ -51,7 +56,7 @@ export default function SettingsModal() {
     setChangelog([]);
     setUpdateConfirmText('');
     try {
-      const res = await fetch('/api/update', { 
+      const res = await fetch('/api/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'check' })
@@ -77,7 +82,7 @@ export default function SettingsModal() {
     setIsUpdating(true);
     setUpdateMessage(null);
     try {
-      const res = await fetch('/api/update', { 
+      const res = await fetch('/api/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'apply' })
@@ -119,10 +124,72 @@ export default function SettingsModal() {
     }
   };
 
+  const fetchAlarms = async () => {
+    try {
+      const res = await fetch('/api/alarms');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setAlarms(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch alarms', err);
+    }
+  };
+
+  const handleAlarmUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingAlarm(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/alarms', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAlarmSound(`/custom-alarms/${data.filename}`);
+        await fetchAlarms();
+      } else {
+        alert(data.error || 'Upload failed');
+      }
+    } catch (err) {
+      alert('Upload failed');
+    } finally {
+      setIsUploadingAlarm(false);
+      if (alarmInputRef.current) alarmInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteAlarm = async (filename: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Are you sure you want to delete ${filename}?`)) return;
+
+    try {
+      const res = await fetch('/api/alarms', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
+      });
+      if (res.ok) {
+        if (alarmSound === `/custom-alarms/${filename}`) {
+          setAlarmSound('/ringtones/alarm.mp3');
+        }
+        await fetchAlarms();
+      }
+    } catch (err) {
+      alert('Failed to delete alarm');
+    }
+  };
+
   useEffect(() => {
     if (isSettingsOpen) {
       fetchWallpapers();
       fetchProfiles();
+      fetchAlarms();
     }
   }, [isSettingsOpen]);
 
@@ -301,7 +368,7 @@ export default function SettingsModal() {
         onClick={toggleSettings}
       />
 
-      <div className="relative w-full max-w-4xl max-h-[85vh] flex flex-col bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden text-white animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-4xl max-h-[95vh] flex flex-col bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden text-white animate-in zoom-in-95 duration-200">
 
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10 bg-black/20">
@@ -335,11 +402,25 @@ export default function SettingsModal() {
               Preferences
             </button>
             <button
+              onClick={() => setActiveTab('sound')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'sound' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'text-white/60 hover:bg-white/5 hover:text-white border border-transparent'}`}
+            >
+              <Bell size={20} />
+              Sound Settings
+            </button>
+            <button
               onClick={() => setActiveTab('profiles')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'profiles' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'text-white/60 hover:bg-white/5 hover:text-white border border-transparent'}`}
             >
               <Users size={20} />
               Workspaces
+            </button>
+            <button
+              onClick={() => setActiveTab('focus')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'focus' ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'text-white/60 hover:bg-white/5 hover:text-white border border-transparent'}`}
+            >
+              <EyeOff size={20} />
+              Focus / Panic Mode
             </button>
             <button
               onClick={() => setActiveTab('data')}
@@ -353,7 +434,7 @@ export default function SettingsModal() {
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${activeTab === 'update' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'text-white/60 hover:bg-white/5 hover:text-white border border-transparent'}`}
             >
               <RefreshCw size={20} />
-              System Update
+              Dashboard Update
             </button>
             <button
               onClick={() => setActiveTab('about')}
@@ -390,27 +471,27 @@ export default function SettingsModal() {
                     <p className="text-white/50 text-sm mt-1">Switch between different isolated environments. Perfect for creating a temporary workspace without touching your main dashboard setup.</p>
                   </div>
 
-                  <div className="flex flex-col gap-4">
-                    <h4 className="font-medium text-lg border-b border-white/10 pb-2">Existing Workspaces</h4>
-                    <div className="grid gap-3">
+                  <div className="flex flex-col gap-2">
+                    <h4 className="font-medium text-base border-b border-white/10 pb-2">Existing Workspaces</h4>
+                    <div className="grid gap-2">
                       {profiles.map((p) => {
                         const isActive = p.id.toString() === activeProfileId;
                         return (
-                          <div key={p.id} className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${isActive ? 'bg-blue-500/10 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'bg-black/20 border-white/5 hover:border-white/20'}`}>
+                          <div key={p.id} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${isActive ? 'bg-blue-500/10 border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.1)]' : 'bg-black/20 border-white/5 hover:border-white/20'}`}>
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${isActive ? 'bg-blue-500 text-white' : 'bg-white/10 text-white/70'}`}>
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-base ${isActive ? 'bg-blue-500 text-white' : 'bg-white/10 text-white/70'}`}>
                                 {p.name.charAt(0).toUpperCase()}
                               </div>
-                              <div>
-                                <p className="font-semibold text-lg">{p.name}</p>
-                                {isActive && <span className="text-xs text-blue-400 font-medium tracking-widest uppercase">Current Active</span>}
+                              <div className="flex flex-col">
+                                <p className="font-medium text-base">{p.name}</p>
+                                {isActive && <span className="text-[10px] text-blue-400 font-bold tracking-widest uppercase mt-0.5">Current Active</span>}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
                               {!isActive && (
                                 <button
                                   onClick={() => handleSwitchProfile(p.id)}
-                                  className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-medium transition-colors border border-white/10"
+                                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors border border-white/10"
                                 >
                                   Switch Workspace
                                 </button>
@@ -418,10 +499,10 @@ export default function SettingsModal() {
                               {p.id !== 1 && (
                                 <button
                                   onClick={() => handleDeleteProfile(p.id, p.name)}
-                                  className="p-2 bg-red-500/20 hover:bg-red-500/80 text-red-300 hover:text-white rounded-xl transition-colors border border-red-500/30 hover:border-red-500"
+                                  className="p-1.5 bg-red-500/20 hover:bg-red-500/80 text-red-300 hover:text-white rounded-lg transition-colors border border-red-500/30 hover:border-red-500"
                                   title="Delete Workspace"
                                 >
-                                  <Trash2 size={18} />
+                                  <Trash2 size={16} />
                                 </button>
                               )}
                             </div>
@@ -431,22 +512,22 @@ export default function SettingsModal() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-4 mt-4">
-                    <h4 className="font-medium text-lg border-b border-white/10 pb-2">Create New Workspace</h4>
-                    <form onSubmit={handleCreateProfile} className="flex gap-3">
+                  <div className="flex flex-col gap-2 mt-2">
+                    <h4 className="font-medium text-base border-b border-white/10 pb-2">Create New Workspace</h4>
+                    <form onSubmit={handleCreateProfile} className="flex gap-2">
                       <input
                         type="text"
                         placeholder="e.g. Work Context, John Doe..."
                         value={newProfileName}
                         onChange={(e) => setNewProfileName(e.target.value)}
-                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 outline-none focus:bg-white/5 focus:border-white/30 transition-all placeholder:text-white/30"
+                        className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 outline-none focus:bg-white/5 focus:border-white/30 transition-all placeholder:text-white/30 text-sm"
                       />
                       <button
                         type="submit"
                         disabled={isCreatingProfile || !newProfileName.trim()}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white px-6 py-3 rounded-xl transition-colors font-medium shadow-lg"
+                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors font-medium shadow-lg text-sm"
                       >
-                        {isCreatingProfile ? <span className="animate-spin">↻</span> : <Plus size={20} />}
+                        {isCreatingProfile ? <span className="animate-spin">↻</span> : <Plus size={16} />}
                         Create & Switch
                       </button>
                     </form>
@@ -628,53 +709,81 @@ export default function SettingsModal() {
                     <p className="text-white/50 text-sm mt-1">Customize how your dashboard looks and feels.</p>
                   </div>
 
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
                     {/* Toggle 24-hour clock */}
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-white/5 rounded-xl">
-                          <Clock size={24} className="text-blue-300" />
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white/5 rounded-lg shrink-0">
+                          <Clock size={20} className="text-blue-300" />
                         </div>
                         <div>
-                          <h4 className="font-medium text-lg">24-Hour Clock Format</h4>
-                          <p className="text-sm text-white/50">Use military time (e.g., 14:00 instead of 2:00 PM)</p>
+                          <h4 className="font-medium text-base">24-Hour Clock Format</h4>
+                          <p className="text-xs text-white/50">Use military time (e.g., 14:00 instead of 2:00 PM)</p>
                         </div>
                       </div>
                       <button
                         onClick={toggle24HourClock}
-                        className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${is24HourClock ? 'bg-blue-500' : 'bg-white/20'}`}
+                        className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors shrink-0 ${is24HourClock ? 'bg-blue-500' : 'bg-white/20'}`}
                       >
-                        <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${is24HourClock ? 'translate-x-8' : 'translate-x-1'}`} />
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${is24HourClock ? 'translate-x-7' : 'translate-x-1'}`} />
                       </button>
                     </div>
 
                     {/* Deadline Alerts */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 mt-4 gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-white/5 rounded-xl shrink-0">
-                          <Bell size={24} className="text-yellow-400" />
+                    <div className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5 gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white/5 rounded-lg shrink-0">
+                          <Bell size={20} className="text-yellow-400" />
                         </div>
                         <div>
-                          <h4 className="font-medium text-lg">Deadline Alerts</h4>
-                          <p className="text-sm text-white/50">Show a popup on the main screen when deadlines approach.</p>
+                          <h4 className="font-medium text-base">Deadline Alerts</h4>
+                          <p className="text-xs text-white/50">Show a popup on the main screen when deadlines approach.</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="text-white/60 text-sm">Alert me</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-white/60 text-xs">Alert me</span>
                         <input
                           type="number"
                           min="0"
                           max="30"
                           value={deadlineAlertDays}
                           onChange={(e) => setDeadlineAlertDays(parseInt(e.target.value) || 0)}
-                          className="w-16 bg-black/40 border border-white/10 rounded-xl px-2 py-2 text-center text-white outline-none focus:border-yellow-400 font-medium"
+                          className="w-14 bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-center text-white outline-none focus:border-yellow-400 font-medium text-sm"
                         />
-                        <span className="text-white/60 text-sm">days before</span>
+                        <span className="text-white/60 text-xs">days before</span>
+                      </div>
+                    </div>
+
+                    {/* Right Toolbar Position */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5 gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white/5 rounded-lg shrink-0">
+                          <Layout size={20} className="text-cyan-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-base">Right Toolbar Position</h4>
+                          <p className="text-xs text-white/50">Adjust the vertical height of the right-side widgets.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0 bg-black/40 border border-white/10 rounded-lg p-1">
+                        <button 
+                          onClick={() => setRightWidgetsOffset(Math.max(0, rightWidgetsOffset - 10))}
+                          className="p-1.5 hover:bg-white/10 rounded-md text-white/60 hover:text-white transition-colors"
+                        >
+                          <ChevronDown size={16} />
+                        </button>
+                        <span className="font-bold text-sm w-10 text-center text-cyan-300">{rightWidgetsOffset}</span>
+                        <button 
+                          onClick={() => setRightWidgetsOffset(rightWidgetsOffset + 10)}
+                          className="p-1.5 hover:bg-white/10 rounded-md text-white/60 hover:text-white transition-colors"
+                        >
+                          <ChevronUp size={16} />
+                        </button>
                       </div>
                     </div>
 
                     {/* Widget Layout & Positioning */}
-                    <div className="flex flex-col p-4 rounded-2xl bg-black/20 border border-white/5 mt-4">
+                    <div className="flex flex-col p-4 rounded-2xl bg-black/20 border border-white/5 mt-2">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-medium text-lg">Widget Layout & Positioning</h4>
                         <button
@@ -732,6 +841,39 @@ export default function SettingsModal() {
                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${lockedWidgets.includes('countdowns') ? 'translate-x-6' : 'translate-x-1'}`} />
                           </button>
                         </div>
+
+                        {/* Lock Calendar */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <Calendar size={18} className="text-pink-400" />
+                            <span className="text-sm font-medium">Lock Calendar</span>
+                          </div>
+                          <button onClick={() => toggleWidgetLock('calendar')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${lockedWidgets.includes('calendar') ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${lockedWidgets.includes('calendar') ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+
+                        {/* Lock Timer */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <TimerIcon size={18} className="text-orange-400" />
+                            <span className="text-sm font-medium">Lock Timer</span>
+                          </div>
+                          <button onClick={() => toggleWidgetLock('timer')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${lockedWidgets.includes('timer') ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${lockedWidgets.includes('timer') ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+
+                        {/* Lock Toolbar */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <Layout size={18} className="text-indigo-400" />
+                            <span className="text-sm font-medium">Lock Right Toolbar</span>
+                          </div>
+                          <button onClick={() => toggleWidgetLock('toolbar')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${lockedWidgets.includes('toolbar') ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${lockedWidgets.includes('toolbar') ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -770,6 +912,17 @@ export default function SettingsModal() {
                           </div>
                           <button onClick={() => toggleVisibility('showTimer')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showTimer ? 'bg-blue-500' : 'bg-white/20'}`}>
                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showTimer ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+
+                        {/* Stopwatch */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <Clock size={18} className="text-blue-400" />
+                            <span className="text-sm font-medium">Stopwatch</span>
+                          </div>
+                          <button onClick={() => toggleVisibility('showStopwatch')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showStopwatch ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showStopwatch ? 'translate-x-6' : 'translate-x-1'}`} />
                           </button>
                         </div>
 
@@ -838,7 +991,269 @@ export default function SettingsModal() {
                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showCalendar ? 'translate-x-6' : 'translate-x-1'}`} />
                           </button>
                         </div>
+                        {/* Stats Modal */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <BarChart2 size={18} className="text-emerald-400" />
+                            <span className="text-sm font-medium">Stats Modal</span>
+                          </div>
+                          <button onClick={() => toggleVisibility('showStats')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showStats ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showStats ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+
+                        {/* Roadmap & Plans */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <Map size={18} className="text-indigo-400" />
+                            <span className="text-sm font-medium">Roadmap & Plans</span>
+                          </div>
+                          <button onClick={() => toggleVisibility('showPlans')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showPlans ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showPlans ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+
+                        {/* Quick Notes */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <StickyNote size={18} className="text-yellow-300" />
+                            <span className="text-sm font-medium">Quick Notes</span>
+                          </div>
+                          <button onClick={() => toggleVisibility('showNotes')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showNotes ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showNotes ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+
+                        {/* Timetable */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <CalendarDays size={18} className="text-purple-400" />
+                            <span className="text-sm font-medium">Timetable</span>
+                          </div>
+                          <button onClick={() => toggleVisibility('showTimetable')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showTimetable ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showTimetable ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+
+                        {/* Bottom Dock */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <Layout size={18} className="text-cyan-300" />
+                            <span className="text-sm font-medium">Bottom Dock</span>
+                          </div>
+                          <button onClick={() => toggleVisibility('showDock')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showDock ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showDock ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+
+                        {/* Deadline Alerts */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <Bell size={18} className="text-red-400" />
+                            <span className="text-sm font-medium">Deadline Alerts</span>
+                          </div>
+                          <button onClick={() => toggleVisibility('showDeadlineAlerts')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showDeadlineAlerts ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showDeadlineAlerts ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+
+                        {/* Background Switcher */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <ImageIcon size={18} className="text-green-300" />
+                            <span className="text-sm font-medium">Background Switcher</span>
+                          </div>
+                          <button onClick={() => toggleVisibility('showBgSwitcher')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showBgSwitcher ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showBgSwitcher ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+
+                        {/* Settings Button */}
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                          <div className="flex items-center gap-3">
+                            <SettingsIcon size={18} className="text-gray-400" />
+                            <span className="text-sm font-medium">Settings Button</span>
+                          </div>
+                          <button onClick={() => toggleVisibility('showSettingsBtn')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showSettingsBtn ? 'bg-blue-500' : 'bg-white/20'}`}>
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showSettingsBtn ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'sound' && (
+                <div className="flex flex-col gap-6">
+                  <div>
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <Bell size={20} className="text-blue-400" />
+                      Sound Settings
+                    </h3>
+                    <p className="text-white/50 text-sm mt-1">Manage notification sounds, playback timers, and settings.</p>
+                  </div>
+
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-8">
+
+                    {/* Auto Stop Timer */}
+                    <div className="flex flex-col gap-4">
+                      <div className="flex justify-between items-center">
+                        <label className="text-sm font-semibold text-white/80">Auto Stop Timer</label>
+                        <span className="text-xs bg-white/10 px-2 py-1 rounded text-white/60">{alarmDurationSecs} Seconds</span>
+                      </div>
+                      <p className="text-xs text-white/40 -mt-2">How long should the sound ring before automatically turning off?</p>
+                      <input 
+                        type="range" 
+                        min="5" 
+                        max="120" 
+                        step="5"
+                        value={alarmDurationSecs || 60} 
+                        onChange={(e) => setAlarmDurationSecs(parseInt(e.target.value))} 
+                        className="w-full h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400"
+                      />
+                      <div className="flex justify-between text-[10px] text-white/40 mt-1">
+                        <span>5s</span>
+                        <span>1m</span>
+                        <span>2m</span>
+                      </div>
+                    </div>
+
+                    {/* Alarm Selection */}
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-semibold text-white/80">Select Alarm Sound</label>
+                        
+                        <div>
+                          <input
+                            type="file"
+                            accept="audio/*"
+                            className="hidden"
+                            ref={alarmInputRef}
+                            onChange={handleAlarmUpload}
+                          />
+                          <button
+                            onClick={() => alarmInputRef.current?.click()}
+                            disabled={isUploadingAlarm}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600/80 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition-colors disabled:opacity-50"
+                          >
+                            {isUploadingAlarm ? <RefreshCw size={14} className="animate-spin" /> : <UploadCloud size={14} />}
+                            Upload Custom Alarm
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-2">
+                        {/* Default Alarm */}
+                        <div
+                          className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${alarmSound === '/ringtones/alarm.mp3' ? 'bg-blue-500/20 border-blue-500/50' : 'bg-black/20 border-white/10 hover:border-white/30'}`}
+                          onClick={() => setAlarmSound('/ringtones/alarm.mp3')}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${alarmSound === '/ringtones/alarm.mp3' ? 'border-blue-400' : 'border-white/30'}`}>
+                              {alarmSound === '/ringtones/alarm.mp3' && <div className="w-2 h-2 rounded-full bg-blue-400" />}
+                            </div>
+                            <span className="text-sm font-medium">Default Alarm</span>
+                          </div>
+                        </div>
+
+                        {/* Custom Alarms */}
+                        {alarms.map((alarm) => {
+                          const fullPath = `/custom-alarms/${alarm}`;
+                          const isActive = alarmSound === fullPath;
+                          return (
+                            <div
+                              key={alarm}
+                              className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${isActive ? 'bg-blue-500/20 border-blue-500/50' : 'bg-black/20 border-white/10 hover:border-white/30'}`}
+                              onClick={() => setAlarmSound(fullPath)}
+                            >
+                              <div className="flex items-center gap-3 overflow-hidden">
+                                <div className={`w-4 h-4 shrink-0 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-blue-400' : 'border-white/30'}`}>
+                                  {isActive && <div className="w-2 h-2 rounded-full bg-blue-400" />}
+                                </div>
+                                <span className="text-sm font-medium truncate">{alarm}</span>
+                              </div>
+                              <button 
+                                onClick={(e) => handleDeleteAlarm(alarm, e)}
+                                className="p-1.5 shrink-0 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 transition-colors"
+                                title="Delete Alarm"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'focus' && (
+                <div className="flex flex-col gap-6">
+                  <div>
+                    <h3 className="text-xl font-semibold flex items-center gap-2"><EyeOff className="text-red-400" /> Focus & Panic Mode</h3>
+                    <p className="text-white/50 text-sm mt-1">Configure what elements disappear instantly when you need privacy.</p>
+                  </div>
+
+                  {/* Focus Mode Configuration */}
+                  <div className="flex flex-col p-4 rounded-2xl bg-black/20 border border-white/5 mt-2">
+                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl mb-5">
+                      <h4 className="font-semibold text-red-300">Keyboard Shortcuts</h4>
+                      <p className="text-sm text-white/80 mt-1 leading-relaxed">
+                        Press <strong>Ctrl + H</strong> to instantly hide the selected widgets.
+                        <br />
+                        If <span className="text-red-400 font-bold">ALL</span> items are set to hide (Panic Mode), you must press <strong>Ctrl + Shift + H</strong> to make them reappear. Otherwise, a normal <strong>Ctrl + H</strong> will toggle them back.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
+                      <div>
+                        <h4 className="font-medium text-lg text-red-400">Widget Selection</h4>
+                        <p className="text-sm text-white/50 mt-1">Select which elements should be hidden when you activate Focus Mode.</p>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={() => setHideAll(false)}
+                          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl transition-colors border border-white/10 font-medium text-sm"
+                        >
+                          Keep All Visible
+                        </button>
+                        <button
+                          onClick={() => setHideAll(true)}
+                          className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-300 rounded-xl transition-colors border border-red-500/30 font-medium text-sm"
+                        >
+                          Hide All
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {Object.entries({
+                        quote: 'Daily Quote',
+                        stats: 'Stats Modal',
+                        plans: 'Roadmap & Plans',
+                        countdowns: 'Target Countdowns',
+                        tasks: 'Tasks',
+                        notes: 'Quick Notes',
+                        calendar: 'Calendar',
+                        timetable: 'Timetable',
+                        health: 'Health Rings',
+                        timer: 'Session Timer',
+                        dock: 'Bottom Dock',
+                        clock: 'Big Clock',
+                        deadlineAlerts: 'Deadline Alerts',
+                        bgSwitcher: 'Background Switcher',
+                        settingsBtn: 'Settings Button',
+                        videoControls: 'Video Controls'
+                      }).map(([key, label]) => (
+                        <div key={key} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                          <span className="text-sm text-white/80">{label}</span>
+                          <button onClick={() => setHideConfig(key, !hideConfig[key])} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${hideConfig[key] ? 'bg-red-500' : 'bg-blue-500/50'}`} title={hideConfig[key] ? 'Will be hidden in Focus Mode' : 'Will stay visible in Focus Mode'}>
+                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${hideConfig[key] ? 'translate-x-5' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -912,8 +1327,8 @@ export default function SettingsModal() {
                                 key={days}
                                 onClick={() => setDeleteDays(days)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${deleteDays === days
-                                    ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/50 scale-105'
-                                    : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'
+                                  ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/50 scale-105'
+                                  : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'
                                   }`}
                               >
                                 {days} Days
@@ -966,13 +1381,13 @@ export default function SettingsModal() {
               )}
 
               {activeTab === 'about' && (
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col">
                   <div>
                     <h3 className="text-xl font-semibold">About Developer</h3>
                     <p className="text-white/50 text-sm mt-1">Creator and maintainer of the Productivity Dashboard.</p>
                   </div>
 
-                  <div className="flex flex-col md:flex-row items-center md:items-start gap-6 bg-black/20 border border-white/10 rounded-3xl p-3 relative overflow-hidden">
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-3 bg-black/20 border border-white/10 rounded-3xl p-2 relative overflow-hidden">
                     {/* Decorative Gradient Blob */}
                     <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-500/20 blur-3xl rounded-full mix-blend-screen pointer-events-none" />
 
@@ -996,16 +1411,16 @@ export default function SettingsModal() {
 
                       <p className="text-blue-300 font-medium tracking-wide uppercase text-[11px] mb-2">Full Stack MERN Developer</p>
 
-                      <p className="text-[12px] text-white/60 mb-5 leading-relaxed max-w-sm">
-                        Have any suggestions, feature requests, or found a bug? Feel free to send them to me directly on Telegram!
+                      <p className="text-[12px] text-white/60 mb-4 leading-relaxed max-w-sm">
+                        Have any suggestions, feature requests, or found a bug? Feel free to send them to me directly on LinkedIn or on Telegram!
                       </p>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mb-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full mb-2">
                         <a
                           href="https://www.linkedin.com/in/anand-kumar-gonaboyina-b63946378"
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-[#0077b5]/30 rounded-2xl p-3 transition-all hover:scale-105"
+                          className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-[#0077b5]/30 rounded-2xl p-2 transition-all hover:scale-105"
                         >
                           <div className="p-2 bg-[#0077b5]/20 rounded-xl shrink-0 flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#0077b5]">
@@ -1068,40 +1483,40 @@ export default function SettingsModal() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col p-6 bg-black/20 border border-white/5 rounded-3xl mt-2 text-center items-center justify-center relative overflow-hidden">
+                  <div className="flex flex-col p-1 bg-black/20 border border-white/5 rounded-3xl text-center items-center justify-center relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 blur-3xl rounded-full" />
                     <h3 className="text-xl font-bold mb-2">Support the Project ❤️</h3>
-                    <p className="text-sm text-white/60 max-w-md mx-auto mb-6">
-                      It took a lot of effort and time to build and maintain this. Consider supporting by leaving a payment message so I know who it works well for!
+                    <p className="text-sm text-white/60 max-w-md mx-auto mb-6 leading-relaxed">
+                      Built with love, but inspired by the pain of endless distractions and messy workspaces. It took many late nights to bring this vision to life. If this dashboard helps you reclaim your focus, consider supporting its continued development. A small tip goes a long way—and please leave a message, I'd love to hear how it's helping you!
                     </p>
 
                     <div className="flex flex-wrap justify-center gap-3 mb-6">
                       <button onClick={() => setDonationAmount(50)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${donationAmount === 50 ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 scale-105 shadow-lg shadow-pink-500/20' : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'}`}>₹50 (Coffee)</button>
                       <button onClick={() => setDonationAmount(100)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${donationAmount === 100 ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 scale-105 shadow-lg shadow-pink-500/20' : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'}`}>₹100 (Lunch)</button>
                       <button onClick={() => setDonationAmount(200)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${donationAmount === 200 ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 scale-105 shadow-lg shadow-pink-500/20' : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'}`}>₹200 (Book)</button>
-                      <button onClick={() => setDonationAmount(500)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${donationAmount === 500 ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 scale-105 shadow-lg shadow-pink-500/20' : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'}`}>₹500 (Server Funds)</button>
+                      <button onClick={() => setDonationAmount(500)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${donationAmount === 500 ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 scale-105 shadow-lg shadow-pink-500/20' : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'}`}>₹500 (Sponsor)</button>
                       <button onClick={() => setDonationAmount(null)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${donationAmount === null ? 'bg-pink-500/20 text-pink-300 border-pink-500/50 scale-105 shadow-lg shadow-pink-500/20' : 'bg-black/40 text-white/50 border-white/5 hover:border-white/20 hover:text-white'}`}>Any Amount</button>
                     </div>
-                    
-                    <div className="flex flex-col sm:flex-row items-center gap-8 bg-white/5 p-6 rounded-2xl border border-white/10">
+
+                    <div className="flex flex-col sm:flex-row items-center gap-8 bg-white/5 p-2 rounded-2xl mb-1 border border-white/10">
                       <div className="bg-white p-3 rounded-2xl shadow-xl hover:scale-105 transition-transform">
-                        <QRCodeSVG 
-                          value={`upi://pay?pa=${upiId}&pn=Anand%20Kumar&cu=INR${donationAmount ? `&am=${donationAmount}` : ''}`} 
-                          size={130} 
+                        <QRCodeSVG
+                          value={`upi://pay?pa=${upiId}&pn=Anand%20Kumar&cu=INR${donationAmount ? `&am=${donationAmount}` : ''}`}
+                          size={130}
                           level="H"
                           includeMargin={false}
                         />
                       </div>
-                      
-                      <div className="flex flex-col text-left gap-3 max-w-[200px]">
+
+                      <div className="flex flex-col text-left gap-3 min-w-[240px]">
                         <div>
-                          <p className="text-xs text-white/50 uppercase tracking-widest font-semibold mb-1">Scan to Pay</p>
+                          <p className="text-xs text-white/70 uppercase tracking-widest font-semibold mb-1 whitespace-nowrap">Scan to Pay (Any UPI App)</p>
                           <p className="font-bold text-lg text-white">{donationAmount ? `₹${donationAmount}` : 'Any Amount'}</p>
                         </div>
                         <div className="h-px w-full bg-white/10 my-1" />
                         <div>
                           <p className="text-xs text-white/50 uppercase tracking-widest font-semibold mb-1">UPI ID</p>
-                          <p className="text-sm text-blue-300 font-mono select-all break-all">{upiId}</p>
+                          <p className="text-sm text-blue-300 font-mono select-all whitespace-nowrap">{upiId}</p>
                         </div>
                       </div>
                     </div>
@@ -1114,9 +1529,9 @@ export default function SettingsModal() {
                   <div>
                     <h3 className="text-xl font-semibold flex items-center gap-2">
                       <RefreshCw className="text-blue-400" size={24} />
-                      System Update
+                      Dashboard Update
                     </h3>
-                    <p className="text-white/50 text-sm mt-1">Keep your dashboard up to date with the latest features and fixes directly from Github.</p>
+                    <p className="text-white/50 text-sm mt-1">Keep your dashboard up to date with the latest features directly from Github. (Note: Git is required, but if you don't have it, the updater will automatically install it for you!)</p>
                   </div>
 
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5 flex flex-col gap-4">
@@ -1135,7 +1550,7 @@ export default function SettingsModal() {
                     <div className="bg-white/5 p-4 rounded-full mb-2">
                       <RefreshCw size={32} className={`text-white/70 ${isUpdating ? 'animate-spin text-blue-400' : ''}`} />
                     </div>
-                    
+
                     <div>
                       <h4 className="text-lg font-bold">Check for Updates</h4>
                       <p className="text-sm text-white/50 mt-1 max-w-md mx-auto">
@@ -1156,11 +1571,11 @@ export default function SettingsModal() {
                             </p>
                             <div className="flex items-center gap-3">
                               <span className="text-xs font-semibold text-white/50 uppercase tracking-widest whitespace-nowrap">Type 'restart' to confirm:</span>
-                              <input 
-                                type="text" 
+                              <input
+                                type="text"
                                 value={updateConfirmText}
                                 onChange={(e) => setUpdateConfirmText(e.target.value)}
-                                placeholder="restart" 
+                                placeholder="restart"
                                 className="w-full max-w-[120px] bg-black/40 border border-white/20 rounded-lg px-3 py-1.5 text-sm font-bold text-white focus:border-red-500 outline-none transition-colors"
                               />
                             </div>
@@ -1193,11 +1608,11 @@ export default function SettingsModal() {
                           {updateMessage.success ? <CheckCircle size={18} className="shrink-0 mt-0.5" /> : <AlertTriangle size={18} className="shrink-0 mt-0.5" />}
                           <div className="flex-1 whitespace-pre-wrap">{updateMessage.text}</div>
                         </div>
-                        
+
                         {updateAvailable && changelog.length > 0 && (
                           <div className="mt-2 w-full bg-black/40 border border-white/10 rounded-xl p-3">
                             <h5 className="text-[11px] font-bold text-blue-300 mb-2 uppercase tracking-wider">What's New</h5>
-                            <div 
+                            <div
                               className="max-h-32 overflow-y-auto pr-2 arrow-scrollbar"
                               onWheel={(e) => { e.stopPropagation(); e.currentTarget.scrollTop += e.deltaY; }}
                             >
@@ -1222,5 +1637,4 @@ export default function SettingsModal() {
       </div>
     </div>
   );
-
 }

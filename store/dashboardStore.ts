@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { getLocalDateString } from '@/utils/date';
 
 export interface Task {
   id: string;
@@ -94,11 +95,17 @@ interface DashboardState {
   timerLastSavedChunks: number;
   timerLastUpdated: number;
   isAlarmPlaying: boolean;
+  alarmSound: string;
+  alarmVolume: number;
   setTimerEndAt: (time: number | null) => void;
   setTimerPausedLeft: (time: number | null) => void;
   setTimerInitialMins: (mins: number | null) => void;
   setTimerLastSavedChunks: (chunks: number) => void;
   setIsAlarmPlaying: (playing: boolean) => void;
+  setAlarmSound: (sound: string) => void;
+  alarmDurationSecs: number;
+  setAlarmDurationSecs: (secs: number) => void;
+  setAlarmVolume: (vol: number) => void;
 
   // Quotes State
   currentQuote: { text: string; author: string } | null;
@@ -116,6 +123,14 @@ interface DashboardState {
   deleteNote: (id: string) => void;
   setActiveNote: (id: string) => void;
   toggleNotes: () => void;
+
+  // Stopwatch State
+  isStopwatchOpen: boolean;
+  toggleStopwatch: () => void;
+  stopwatchSessions: { id: string; title: string; durationMins: number; durationSecs: number; date: string; timestamp: number }[];
+  addStopwatchSession: (title: string, secs: number, addToStats: boolean) => void;
+  deleteStopwatchSession: (id: string) => void;
+  clearStopwatchSessions: () => void;
 
   // Plans/Roadmap State
   plans: Plan[];
@@ -199,10 +214,31 @@ interface DashboardState {
   showTasks: boolean;
   showCalendar: boolean;
   showTodayWork: boolean;
-  toggleVisibility: (key: 'showHealth' | 'showQuote' | 'showTimer' | 'showCountdowns' | 'showVideoControls' | 'showClock' | 'showTasks' | 'showCalendar' | 'showTodayWork') => void;
+  showStats: boolean;
+  showPlans: boolean;
+  showNotes: boolean;
+  showTimetable: boolean;
+  showDock: boolean;
+  showDeadlineAlerts: boolean;
+  showBgSwitcher: boolean;
+  showSettingsBtn: boolean;
+  showStopwatch: boolean;
+  toggleVisibility: (key: 'showHealth' | 'showQuote' | 'showTimer' | 'showCountdowns' | 'showVideoControls' | 'showClock' | 'showTasks' | 'showCalendar' | 'showTodayWork' | 'showStats' | 'showPlans' | 'showNotes' | 'showTimetable' | 'showDock' | 'showDeadlineAlerts' | 'showBgSwitcher' | 'showSettingsBtn' | 'showStopwatch') => void;
+
+  // Custom Hide Configuration (Panic Mode / Focus Mode)
+  hideConfig: Record<string, boolean>;
+  setHideConfig: (key: string, value: boolean) => void;
+  setHideAll: (hide: boolean) => void;
+
+  // Custom Placement
+  rightWidgetsOffset: number;
+  setRightWidgetsOffset: (offset: number) => void;
 
   clearOldData: (days: number) => Promise<void>;
   clearAllData: () => Promise<void>;
+
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -222,19 +258,29 @@ let failedToLoadDB = false;
 
 const fileStorage = createJSONStorage(() => ({
   getItem: async (_name: string): Promise<string | null> => {
-    try {
-      const res = await fetch(`/api/store?profileId=${getActiveProfileId()}`, { cache: 'no-store' });
-      if (!res.ok) throw new Error('API error');
-      const json = await res.json();
-      
-      // If the API returns explicitly null data (new profile), we MUST return null 
-      // so Zustand starts from the default empty state, instead of falling back to old localStorage.
-      if (json.data === null) return null;
-      if (json.data) return JSON.stringify(json.data);
-    } catch {
-      // Fall back to localStorage only if API is completely offline
-      console.warn("Failed to fetch store from DB, falling back to localStorage.");
+    if (typeof window === 'undefined') return null;
+    
+    // Retry loop to handle the race condition where Lively Wallpaper loads before the Next.js API is fully booted
+    let retries = 0;
+    while (retries < 15) {
+      try {
+        const res = await fetch(`/api/store?profileId=${getActiveProfileId()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          // If the API returns explicitly null data (new profile), we MUST return null 
+          // so Zustand starts from the default empty state, instead of falling back to old localStorage.
+          if (json.data === null) return null;
+          if (json.data) return JSON.stringify(json.data);
+        }
+      } catch {
+        console.warn(`Database API not ready yet, retrying... (${retries + 1}/15)`);
+      }
+      retries++;
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
+    
+    // Fall back to localStorage only if API is completely offline after retries
+    console.warn("Failed to fetch store from DB after retries, falling back to localStorage.");
     const localData = localStorage.getItem(`dashboard-storage-${getActiveProfileId()}`);
     if (!localData) {
       // If both DB and localStorage are empty/offline, we set a flag so we don't accidentally overwrite the DB with an empty state later.
@@ -243,6 +289,7 @@ const fileStorage = createJSONStorage(() => ({
     return localData;
   },
   setItem: async (_name: string, value: string): Promise<void> => {
+    if (typeof window === 'undefined') return;
     try {
       if (failedToLoadDB) {
         throw new Error("Prevented DB overwrite: previous load failed.");
@@ -253,11 +300,14 @@ const fileStorage = createJSONStorage(() => ({
         body: JSON.stringify({ profileId: getActiveProfileId(), data: JSON.parse(value) }),
       });
     } catch (err) {
-      // Only write to localStorage if API fails (or if we blocked the overwrite)
+      // CRITICAL: If the DB failed to load initially, do NOT write the empty fallback state to localStorage!
+      // This prevents poisoning the fallback system and permanently wiping data.
+      if (failedToLoadDB) return;
       localStorage.setItem(`dashboard-storage-${getActiveProfileId()}`, value);
     }
   },
   removeItem: async (_name: string): Promise<void> => {
+    if (typeof window === 'undefined') return;
     try {
       await fetch('/api/store', {
         method: 'POST',
@@ -280,6 +330,8 @@ export const useDashboardStore = create<DashboardState>()(
       history: {},
       tasks: [],
       isHidden: false,
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
 
       setLockedWallpaper: (filename) => set({ lockedWallpaper: filename }),
       setWallpaper: (url) => set({ wallpaper: url }),
@@ -365,11 +417,17 @@ export const useDashboardStore = create<DashboardState>()(
       timerLastSavedChunks: 0,
       timerLastUpdated: 0,
       isAlarmPlaying: false,
+      alarmSound: '/ringtones/alarm.mp3',
+      alarmVolume: 100,
       setTimerEndAt: (time) => set({ timerEndAt: time, timerLastUpdated: Date.now() }),
       setTimerPausedLeft: (time) => set({ timerPausedLeft: time, timerLastUpdated: Date.now() }),
       setTimerInitialMins: (mins) => set({ timerInitialMins: mins, timerLastUpdated: Date.now() }),
       setTimerLastSavedChunks: (chunks) => set({ timerLastSavedChunks: chunks }),
       setIsAlarmPlaying: (playing) => set({ isAlarmPlaying: playing }),
+      setAlarmSound: (sound) => set({ alarmSound: sound }),
+      alarmDurationSecs: 60,
+      setAlarmDurationSecs: (secs) => set({ alarmDurationSecs: secs }),
+      setAlarmVolume: (vol) => set({ alarmVolume: vol }),
 
       currentQuote: null,
       isQuotePopupOpen: false,
@@ -415,6 +473,37 @@ export const useDashboardStore = create<DashboardState>()(
       }),
       setActiveNote: (id) => set({ activeNoteId: id }),
       toggleNotes: () => set((state) => ({ isNotesOpen: !state.isNotesOpen })),
+
+      // Stopwatch Defaults
+      isStopwatchOpen: false,
+      stopwatchSessions: [],
+      toggleStopwatch: () => set((state) => ({ isStopwatchOpen: !state.isStopwatchOpen })),
+      addStopwatchSession: (title, secs, addToStats) => set((state) => {
+        const mins = Math.floor(secs / 60);
+        
+        // Don't save to history if it's strictly less than a minute
+        if (mins === 0) return state;
+
+        const today = getLocalDateString();
+        
+        let newHistory = state.history;
+        if (addToStats) {
+          newHistory = { ...state.history };
+          newHistory[today] = (newHistory[today] || 0) + mins;
+        }
+        
+        return {
+          history: newHistory,
+          stopwatchSessions: [
+            { id: Date.now().toString(), title, durationMins: mins, durationSecs: secs, date: today, timestamp: Date.now() },
+            ...(state.stopwatchSessions || [])
+          ]
+        };
+      }),
+      deleteStopwatchSession: (id) => set((state) => ({
+        stopwatchSessions: (state.stopwatchSessions || []).filter(s => s.id !== id)
+      })),
+      clearStopwatchSessions: () => set({ stopwatchSessions: [] }),
 
       // Plans State
       plans: [],
@@ -574,7 +663,7 @@ export const useDashboardStore = create<DashboardState>()(
         };
       }),
       
-      lockedWidgets: ['quote', 'tasks', 'countdowns'],
+      lockedWidgets: ['quote', 'tasks', 'countdowns', 'calendar', 'timer', 'toolbar'],
       toggleWidgetLock: (widgetId) => set((state) => ({
         lockedWidgets: state.lockedWidgets.includes(widgetId)
           ? state.lockedWidgets.filter(id => id !== widgetId)
@@ -617,7 +706,47 @@ export const useDashboardStore = create<DashboardState>()(
       showTasks: true,
       showCalendar: true,
       showTodayWork: true,
+      showStats: true,
+      showPlans: true,
+      showNotes: true,
+      showTimetable: true,
+      showDock: true,
+      showDeadlineAlerts: true,
+      showBgSwitcher: true,
+      showSettingsBtn: true,
+      showStopwatch: true,
       toggleVisibility: (key) => set((state) => ({ [key]: !state[key] })),
+
+      hideConfig: {
+        health: false,
+        quote: false,
+        timer: false,
+        countdowns: false,
+        videoControls: false,
+        clock: false,
+        tasks: false,
+        calendar: false,
+        todayWork: false,
+        stats: false,
+        plans: false,
+        notes: false,
+        timetable: false,
+        dock: false,
+        deadlineAlerts: false,
+        bgSwitcher: false,
+        settingsBtn: false
+      },
+      setHideConfig: (key, value) => set((state) => ({
+        hideConfig: { ...state.hideConfig, [key]: value }
+      })),
+      setHideAll: (hide) => set((state) => {
+        const newHideConfig = { ...state.hideConfig };
+        Object.keys(newHideConfig).forEach(k => { newHideConfig[k] = hide; });
+        return { hideConfig: newHideConfig };
+      }),
+
+      rightWidgetsOffset: 48, // Default corresponds to bottom-12 (48px)
+      setRightWidgetsOffset: (offset) => set({ rightWidgetsOffset: Math.max(0, offset) }),
 
       clearOldData: async (days: number) => {
         try {
@@ -674,7 +803,7 @@ export const useDashboardStore = create<DashboardState>()(
         Object.entries(state).filter(([key]) => ![
           'isQuotePopupOpen', 'isTaskManagerOpen', 'isStatsOpen', 'timerTrigger', 
           'isNotesOpen', 'isPlansOpen', 'isTimetableOpen', 'isHealthModalOpen', 'healthData',
-          'isVideoMuted', 'isVideoPlaying', 'isSettingsOpen'
+          'isVideoMuted', 'isVideoPlaying', 'isSettingsOpen', 'isStopwatchOpen', '_hasHydrated'
         ].includes(key))
       ),
       merge: (persistedState: any, currentState: DashboardState) => {
@@ -703,6 +832,9 @@ export const useDashboardStore = create<DashboardState>()(
         }
 
         return { ...currentState, ...persistedState };
+      },
+      onRehydrateStorage: () => (state) => {
+        if (state) state.setHasHydrated(true);
       },
     }
   )
