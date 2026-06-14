@@ -43,8 +43,10 @@ echo.
 echo If anything goes wrong during setup, safely close this
 echo window and run setup.bat again.
 echo.
-pause
-
+:confirmStart
+set /p startConfirm="Do you want to proceed with the setup? Type 'yes' to start or 'no' to cancel: "
+if /i "!startConfirm!"=="no" exit
+if /i not "!startConfirm!"=="yes" goto confirmStart
 echo.
 echo Stopping any existing background instances to prevent file locks...
 call taskkill /F /IM livelywpf.exe >nul 2>&1
@@ -121,7 +123,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo [4/5] Building the dashboard for production...
-call npx next build
+call npm run build
 if %errorlevel% neq 0 (
     color 0C
     echo ERROR: Failed to build the dashboard.
@@ -355,14 +357,38 @@ echo 1. start-server.vbs (Starts Next.js server with 30s delay)
 echo 2. start-lively.vbs (Starts Lively Wallpaper with 60s delay)
 echo.
 echo These are scheduled via Windows Task Scheduler to run
-echo automatically upon logon means whenever you start your computer it will start automatically.
+echo automatically whenever you start your computer.
 echo.
-echo [ HOW TO START AND TEST MANUALLY RIGHT NOW ]
-echo 1. Double-click 'start-server.vbs' in this folder.
-echo    Wait ~30 seconds for the server to spin up.
-echo 2. Double-click 'start-lively.vbs' to start Lively.
+echo Starting the dashboard server now...
+start wscript "start-server.vbs"
+echo Server is starting up in the background!
 echo.
-echo [ LIVELY WALLPAPER SETUP (IF NOT DONE YET) ]
+echo ========================================================
+echo                 CRITICAL NEXT STEPS!
+echo ========================================================
+echo Please read the following instructions carefully from here.
+echo.
+
+:confirmRead
+set /p readConfirm="Type 'ok' to continue to the final instructions: "
+if /i not "!readConfirm!"=="ok" goto confirmRead
+
+echo.
+echo [ 1. VERIFY THE SERVER IS RUNNING ]
+echo The server is running in the background. You can check it 
+echo by opening Chrome or Edge and going to this URL:
+echo http://localhost:4321
+echo.
+echo Wait a few seconds for it to load. Once you see the dashboard
+echo in your browser, proceed to the next step.
+echo.
+
+:confirmBrowser
+set /p browserConfirm="Did you see the dashboard in your browser? Type 'yes' to continue: "
+if /i not "!browserConfirm!"=="yes" goto confirmBrowser
+
+echo.
+echo [ 2. LIVELY WALLPAPER SETUP (IF NOT DONE YET) ]
 echo If you haven't installed Lively Wallpaper yet, please 
 echo download the standalone version using this link:
 echo https://drive.google.com/file/d/1TJWAWPTtTbKNMaNVAwz2GwbSb04NO-J5/view?usp=drive_link
@@ -381,7 +407,7 @@ if /i not "!livelyConfirm!"=="yes" goto confirmLively
 
 echo.
 :confirm
-set /p userConfirm="Have you read everything carefully? Type 'yes' to continue and close: "
+set /p userConfirm="Have you read everything carefully? Type 'yes' to close this window: "
 if /i not "!userConfirm!"=="yes" goto confirm
 
 exit
