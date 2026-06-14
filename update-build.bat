@@ -69,6 +69,18 @@ if exist "prisma\dev.db" (
 
 echo.
 echo [3/5] PULLING LATEST UPDATE FROM GITHUB...
+
+:: Ensure it is a git repository before pulling
+if not exist ".git" (
+    echo Initializing local git repository for OTA updates...
+    git init
+    git remote add origin https://github.com/anandgonaboyina/Personal_Desktop_Productivity_Wallpaper.git
+    git branch -M main
+) else (
+    :: Just to be safe, set the remote URL in case it's missing
+    git remote set-url origin https://github.com/anandgonaboyina/Personal_Desktop_Productivity_Wallpaper.git >nul 2>&1
+)
+
 call git fetch origin
 call git reset --hard origin/main
 echo Update pulled successfully.

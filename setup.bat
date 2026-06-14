@@ -54,7 +54,7 @@ call taskkill /F /IM Lively.exe >nul 2>&1
 call npx -y kill-port 4321 >nul 2>&1
 
 echo.
-echo [1/5] Checking Dependencies (Node.js ^& Git)...
+echo [1/6] Checking Dependencies (Node.js ^& Git)...
 
 :: Check Node.js
 node -v >nul 2>&1
@@ -99,7 +99,22 @@ if !errorlevel! neq 0 (
 )
 
 echo.
-echo [2/5] Installing project dependencies...
+echo [2/6] Initializing Git Repository for OTA Updates...
+if not exist ".git" (
+    echo Initializing local git repository...
+    git init
+    git remote add origin https://github.com/anandgonaboyina/Personal_Desktop_Productivity_Wallpaper.git
+    git fetch origin
+    git reset --hard origin/main
+    git branch -M main
+) else (
+    echo Git repository is already initialized!
+    :: Ensure the remote URL is up-to-date
+    git remote set-url origin https://github.com/anandgonaboyina/Personal_Desktop_Productivity_Wallpaper.git
+)
+
+echo.
+echo [3/6] Installing project dependencies...
 call npm install
 if %errorlevel% neq 0 (
     color 0C
@@ -109,7 +124,7 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo [3/5] Configuring local SQLite database (Zero Setup Required!)...
+echo [4/6] Configuring local SQLite database (Zero Setup Required!)...
 echo Creating .env file automatically...
 echo DATABASE_URL="file:./dev.db" > .env
 call npx prisma generate
@@ -122,7 +137,7 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo [4/5] Building the dashboard for production...
+echo [5/6] Building the dashboard for production...
 call npm run build
 if %errorlevel% neq 0 (
     color 0C
@@ -132,7 +147,7 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo [5/5] Configuring Automatic Background Startup (Task Scheduler)...
+echo [6/6] Configuring Automatic Background Startup (Task Scheduler)...
 echo Finding Lively Wallpaper executable...
 
 set "LIVELY_EXE="
