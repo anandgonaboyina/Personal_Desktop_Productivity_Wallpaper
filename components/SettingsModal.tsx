@@ -12,14 +12,14 @@ const DEFAULT_WALLPAPERS = [
 
 export default function SettingsModal() {
   const { settingsActiveTab, setSettingsActiveTab, isSettingsOpen, toggleSettings, is24HourClock, toggle24HourClock, currentBgSrc, hiddenWallpapers, toggleWallpaperVisibility, showHealth, showQuote, showTimer, showCountdowns, showVideoControls, showClock, showTasks, showCalendar, showTodayWork, showStats, showPlans, showNotes, showTimetable, showDock, showDeadlineAlerts, showBgSwitcher, showSettingsBtn, showStopwatch, toggleVisibility, isSlideshowEnabled, setIsSlideshowEnabled, slideshowIntervalMins, setSlideshowIntervalMins, lockedWidgets, toggleWidgetLock, resetAllOffsets, clearOldData, clearAllData, lockedWallpaper, setLockedWallpaper, deadlineAlertDays, setDeadlineAlertDays, hideConfig, setHideConfig, setHideAll, rightWidgetsOffset, setRightWidgetsOffset, alarmSound, setAlarmSound, alarmDurationSecs, setAlarmDurationSecs, alarmVolume, setAlarmVolume } = useDashboardStore();
-  
+
   const [deleteDays, setDeleteDays] = useState<number>(60);
   const upiId = 'gonaboyinaanandkumar@ybl';
 
   const [wallpapers, setWallpapers] = useState<{ type: string, src: string, filename: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [alarms, setAlarms] = useState<string[]>([]);
   const [isUploadingAlarm, setIsUploadingAlarm] = useState(false);
   const alarmInputRef = useRef<HTMLInputElement>(null);
@@ -370,7 +370,8 @@ export default function SettingsModal() {
 
       <div className="relative w-full max-w-4xl max-h-[95vh] flex flex-col bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden text-white animate-in zoom-in-95 duration-200">
 
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
           @keyframes continuous-glass-sweep {
             0% { left: -100%; }
             100% { left: 200%; }
@@ -786,14 +787,14 @@ export default function SettingsModal() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0 bg-black/40 border border-white/10 rounded-lg p-1">
-                        <button 
+                        <button
                           onClick={() => setRightWidgetsOffset(Math.max(0, rightWidgetsOffset - 10))}
                           className="p-1.5 hover:bg-white/10 rounded-md text-white/60 hover:text-white transition-colors"
                         >
                           <ChevronDown size={16} />
                         </button>
                         <span className="font-bold text-sm w-10 text-center text-cyan-300">{rightWidgetsOffset}</span>
-                        <button 
+                        <button
                           onClick={() => setRightWidgetsOffset(rightWidgetsOffset + 10)}
                           className="p-1.5 hover:bg-white/10 rounded-md text-white/60 hover:text-white transition-colors"
                         >
@@ -1123,13 +1124,13 @@ export default function SettingsModal() {
                         <span className="text-xs bg-white/10 px-2 py-1 rounded text-white/60">{alarmDurationSecs} Seconds</span>
                       </div>
                       <p className="text-xs text-white/40 -mt-2">How long should the sound ring before automatically turning off?</p>
-                      <input 
-                        type="range" 
-                        min="5" 
-                        max="120" 
+                      <input
+                        type="range"
+                        min="5"
+                        max="120"
                         step="5"
-                        value={alarmDurationSecs || 60} 
-                        onChange={(e) => setAlarmDurationSecs(parseInt(e.target.value))} 
+                        value={alarmDurationSecs || 60}
+                        onChange={(e) => setAlarmDurationSecs(parseInt(e.target.value))}
                         className="w-full h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400"
                       />
                       <div className="flex justify-between text-[10px] text-white/40 mt-1">
@@ -1143,7 +1144,7 @@ export default function SettingsModal() {
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center justify-between">
                         <label className="text-sm font-semibold text-white/80">Select Alarm Sound</label>
-                        
+
                         <div>
                           <input
                             type="file"
@@ -1193,7 +1194,7 @@ export default function SettingsModal() {
                                 </div>
                                 <span className="text-sm font-medium truncate">{alarm}</span>
                               </div>
-                              <button 
+                              <button
                                 onClick={(e) => handleDeleteAlarm(alarm, e)}
                                 className="p-1.5 shrink-0 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 transition-colors"
                                 title="Delete Alarm"
@@ -1658,7 +1659,7 @@ export default function SettingsModal() {
                       <div>
                         <h4 className="font-bold text-blue-300">Git Installation Required</h4>
                         <p className="text-sm text-blue-200/70 mt-1 leading-relaxed">
-                          This updater uses Git to pull the latest changes. Ensure Git is installed and available in your system path. Schema changes or missing variables will safely default to zero/null without wiping data.
+                          This updater uses Git to pull the latest changes. (Note: Git is required, but if you don't have it, the updater will automatically install it for you!)
                         </p>
                       </div>
                     </div>
@@ -1688,6 +1689,8 @@ export default function SettingsModal() {
                               Applying this update will temporarily stop your server in the background to safely rebuild the source code. The dashboard will automatically restart once finished.
                               <br /><br />
                               <span className="text-orange-400 font-semibold">RECOMMENDATION:</span> Please go to the <strong>Data & Backup</strong> tab and click <strong>Export Data</strong> before updating. While rare, updates to the database schema can occasionally wipe your current tasks and notes.
+                              <br /><br />
+                              <span className="text-yellow-400 font-bold tracking-wide">IMPORTANT:</span> When you click Update, a Windows security prompt may appear. <strong className="text-white text-[13px]">You MUST click "Yes"</strong> on that prompt to allow the seamless background installation!
                             </p>
                             <div className="flex items-center gap-3 mt-2">
                               <span className="text-xs font-semibold text-white/50 uppercase tracking-wider break-words text-wrap">Click "Update Now" to begin the seamless background update.</span>
