@@ -25,10 +25,87 @@ export default function SettingsModal() {
   const alarmInputRef = useRef<HTMLInputElement>(null);
 
   const settingsScrollRef = useRef<HTMLDivElement>(null);
+  const sidebarScrollRef = useRef<HTMLDivElement>(null);
 
   const scrollBy = (ref: React.RefObject<HTMLDivElement | null>, direction: 'up' | 'down') => {
     if (ref.current) {
       ref.current.scrollBy({ top: direction === 'up' ? -300 : 300, behavior: 'smooth' });
+    }
+  };
+
+  const [canSidebarScrollUp, setCanSidebarScrollUp] = useState(false);
+  const [canSidebarScrollDown, setCanSidebarScrollDown] = useState(false);
+  const [canContentScrollUp, setCanContentScrollUp] = useState(false);
+  const [canContentScrollDown, setCanContentScrollDown] = useState(false);
+
+  const checkScroll = (ref: React.RefObject<HTMLDivElement | null>, setUp: (v: boolean) => void, setDown: (v: boolean) => void) => {
+    if (ref.current) {
+      const { scrollTop, scrollHeight, clientHeight } = ref.current;
+      setUp(scrollTop > 0);
+      setDown(Math.ceil(scrollTop + clientHeight) < scrollHeight);
+    }
+  };
+
+  useEffect(() => {
+    if (isSettingsOpen) {
+      setTimeout(() => {
+        checkScroll(sidebarScrollRef, setCanSidebarScrollUp, setCanSidebarScrollDown);
+        checkScroll(settingsScrollRef, setCanContentScrollUp, setCanContentScrollDown);
+      }, 100);
+    }
+  }, [isSettingsOpen, settingsActiveTab]);
+
+  // Drag to scroll logic for SettingsModal
+  const isDragging = useRef(false);
+  const startY = useRef(0);
+  const startScrollTop = useRef(0);
+  const activeDragRef = useRef<HTMLElement | null>(null);
+  const dragMode = useRef<'content' | 'scrollbar'>('content');
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
+    const currentTarget = e.currentTarget as HTMLElement;
+    
+    if (e.button !== 0 || target.tagName.toLowerCase() === 'input' || target.tagName.toLowerCase() === 'textarea' || target.closest('button')) return;
+    
+    isDragging.current = true;
+    activeDragRef.current = currentTarget;
+    if (activeDragRef.current) {
+      startY.current = e.pageY;
+      startScrollTop.current = activeDragRef.current.scrollTop;
+      
+      const scrollbarWidth = currentTarget.offsetWidth - currentTarget.clientWidth;
+      if (scrollbarWidth > 0 && e.clientX >= currentTarget.getBoundingClientRect().right - scrollbarWidth) {
+        dragMode.current = 'scrollbar';
+      } else {
+        dragMode.current = 'content';
+        activeDragRef.current.style.cursor = 'grabbing';
+        activeDragRef.current.style.userSelect = 'none';
+      }
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging.current || !activeDragRef.current) return;
+    e.preventDefault();
+    
+    const y = e.pageY;
+    const walk = y - startY.current;
+    
+    if (dragMode.current === 'scrollbar') {
+      const ratio = activeDragRef.current.scrollHeight / activeDragRef.current.clientHeight;
+      activeDragRef.current.scrollTop = startScrollTop.current + (walk * ratio);
+    } else {
+      activeDragRef.current.scrollTop = startScrollTop.current - (walk * 1.5);
+    }
+  };
+
+  const handlePointerUpOrLeave = () => {
+    isDragging.current = false;
+    if (activeDragRef.current) {
+      activeDragRef.current.style.cursor = '';
+      activeDragRef.current.style.userSelect = '';
+      activeDragRef.current = null;
     }
   };
 
@@ -362,13 +439,13 @@ export default function SettingsModal() {
   if (!isSettingsOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 pointer-events-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pb-20 sm:p-6 sm:pb-24 pointer-events-auto">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={toggleSettings}
       />
 
-      <div className="relative w-full max-w-4xl max-h-[95vh] flex flex-col bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden text-white animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-4xl h-[85vh] max-h-[850px] flex flex-col bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden text-white animate-in zoom-in-95 duration-200">
 
         <style dangerouslySetInnerHTML={{
           __html: `
@@ -396,8 +473,30 @@ export default function SettingsModal() {
 
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar Tabs */}
-          <div className="w-64 bg-black/20 border-r border-white/10 p-4 flex flex-col gap-2">
-            <button
+          <div className="w-64 bg-black/20 border-r border-white/10 flex flex-col relative group">
+            {canSidebarScrollUp && (
+              <div className="absolute top-2 left-0 right-0 flex justify-center z-30 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <button
+                  onClick={() => scrollBy(sidebarScrollRef, 'up')}
+                  className="bg-blue-500/80 hover:bg-blue-400 text-white p-1 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)] border border-blue-400/50 backdrop-blur-md transition-all pointer-events-auto animate-bounce"
+                >
+                  <ChevronUp size={18} strokeWidth={3} />
+                </button>
+              </div>
+            )}
+
+            <div 
+              ref={sidebarScrollRef}
+              onScroll={() => checkScroll(sidebarScrollRef, setCanSidebarScrollUp, setCanSidebarScrollDown)}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUpOrLeave}
+              onPointerLeave={handlePointerUpOrLeave}
+              onPointerCancel={handlePointerUpOrLeave}
+              className="flex-1 p-4 pb-12 pt-10 flex flex-col gap-2 overflow-y-auto arrow-scrollbar"
+              onWheel={(e) => { e.stopPropagation(); e.currentTarget.scrollTop += e.deltaY; }}
+            >
+              <button
               onClick={() => setSettingsActiveTab('wallpapers')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${settingsActiveTab === 'wallpapers' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'text-white/60 hover:bg-white/5 hover:text-white border border-transparent'}`}
             >
@@ -476,12 +575,43 @@ export default function SettingsModal() {
               </div>
             </button>
           </div>
+          
+          {/* Sidebar Scroll Down Button */}
+          {canSidebarScrollDown && (
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center z-30 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <button
+                onClick={() => scrollBy(sidebarScrollRef, 'down')}
+                className="bg-blue-500/80 hover:bg-blue-400 text-white p-1 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)] border border-blue-400/50 backdrop-blur-md transition-all pointer-events-auto animate-bounce"
+              >
+                <ChevronDown size={18} strokeWidth={3} />
+              </button>
+            </div>
+          )}
+          </div>
 
           {/* Content Area */}
-          <div className="relative flex-1 overflow-hidden flex flex-col">
+          <div className="relative flex-1 overflow-hidden flex flex-col group/content">
+            {/* Content Scroll Up Button */}
+            {canContentScrollUp && (
+              <div className="absolute top-4 left-0 right-0 flex justify-center z-30 pointer-events-none opacity-0 group-hover/content:opacity-100 transition-opacity duration-300">
+                <button
+                  onClick={() => scrollBy(settingsScrollRef, 'up')}
+                  className="bg-blue-500/80 hover:bg-blue-400 text-white p-1.5 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.6)] border border-blue-400/50 backdrop-blur-md transition-all pointer-events-auto animate-bounce"
+                >
+                  <ChevronUp size={24} strokeWidth={3} />
+                </button>
+              </div>
+            )}
+
             <div
               ref={settingsScrollRef}
-              className="flex-1 overflow-y-auto p-6 arrow-scrollbar"
+              onScroll={() => checkScroll(settingsScrollRef, setCanContentScrollUp, setCanContentScrollDown)}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUpOrLeave}
+              onPointerLeave={handlePointerUpOrLeave}
+              onPointerCancel={handlePointerUpOrLeave}
+              className="flex-1 overflow-y-auto p-6 pb-16 pt-12 arrow-scrollbar"
               onWheel={(e) => { e.stopPropagation(); e.currentTarget.scrollTop += e.deltaY; }}
             >
 
@@ -1730,6 +1860,11 @@ export default function SettingsModal() {
                             <h5 className="text-[11px] font-bold text-blue-300 mb-2 uppercase tracking-wider">What's New</h5>
                             <div
                               className="max-h-32 overflow-y-auto pr-2 arrow-scrollbar"
+                              onPointerDown={handlePointerDown}
+                              onPointerMove={handlePointerMove}
+                              onPointerUp={handlePointerUpOrLeave}
+                              onPointerLeave={handlePointerUpOrLeave}
+                              onPointerCancel={handlePointerUpOrLeave}
                               onWheel={(e) => { e.stopPropagation(); e.currentTarget.scrollTop += e.deltaY; }}
                             >
                               <ul className="list-disc pl-4 space-y-1.5">
@@ -1746,8 +1881,18 @@ export default function SettingsModal() {
                 </div>
               )}
             </div>
-
-
+            
+            {/* Content Scroll Down Button */}
+            {canContentScrollDown && (
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center z-30 pointer-events-none opacity-0 group-hover/content:opacity-100 transition-opacity duration-300">
+                <button
+                  onClick={() => scrollBy(settingsScrollRef, 'down')}
+                  className="bg-blue-500/80 hover:bg-blue-400 text-white p-1.5 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.6)] border border-blue-400/50 backdrop-blur-md transition-all pointer-events-auto animate-bounce"
+                >
+                  <ChevronDown size={24} strokeWidth={3} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

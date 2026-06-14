@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useDashboardStore } from '@/store/dashboardStore';
-import { Plus, X, StickyNote, Trash2, Undo, Redo, Bold, Italic, Underline, List, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, X, StickyNote, Trash2, Undo, Redo, Bold, Italic, Underline, List } from 'lucide-react';
+import ScrollableWithArrows from './ScrollableWithArrows';
 
 function EditorBlock({ date, initialHtml, onChange }: { date: string; initialHtml: string; onChange: (html: string) => void }) {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -108,20 +109,12 @@ function NotepadModal({ toggleNotes, notes, activeNoteId, addNote, updateNoteTit
     document.execCommand(cmd, false, val);
   };
 
-  const sidebarScrollRef = useRef<HTMLDivElement>(null);
-  const editorScrollRef = useRef<HTMLDivElement>(null);
-
-  const scrollBy = (ref: React.RefObject<HTMLDivElement | null>, direction: 'up' | 'down') => {
-    if (ref.current) {
-      ref.current.scrollBy({ top: direction === 'up' ? -200 : 200, behavior: 'smooth' });
-    }
-  };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300 pointer-events-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pb-20 sm:pb-24 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300 pointer-events-auto">
       <div className="absolute inset-0" onClick={toggleNotes} />
 
-      <div className="relative w-full max-w-6xl h-[85vh] flex rounded-3xl bg-black/60 backdrop-blur-2xl border border-white/20 shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+      <div className="relative w-full max-w-6xl h-[85vh] max-h-[850px] flex rounded-3xl bg-black/60 backdrop-blur-2xl border border-white/20 shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300">
 
         {/* Left Sidebar: Notes List */}
         <div className="w-1/4 max-w-[300px] bg-white/5 border-r border-white/10 flex flex-col">
@@ -139,11 +132,7 @@ function NotepadModal({ toggleNotes, notes, activeNoteId, addNote, updateNoteTit
           </div>
 
           <div className="relative flex-1 overflow-hidden flex flex-col">
-            <div 
-              ref={sidebarScrollRef}
-              className="flex-1 overflow-y-auto p-2 flex flex-col gap-1 arrow-scrollbar pr-1"
-              onWheel={(e) => { e.stopPropagation(); e.currentTarget.scrollTop += e.deltaY; }}
-            >
+            <ScrollableWithArrows className="p-2 flex flex-col gap-1 pr-1">
               {notes.map((note: any) => (
                 <div
                   key={note.id}
@@ -165,7 +154,7 @@ function NotepadModal({ toggleNotes, notes, activeNoteId, addNote, updateNoteTit
                   </button>
                 </div>
               ))}
-          </div>
+            </ScrollableWithArrows>
         </div>
       </div>
 
@@ -189,11 +178,7 @@ function NotepadModal({ toggleNotes, notes, activeNoteId, addNote, updateNoteTit
               />
 
               <div className="relative flex-1 overflow-hidden flex flex-col">
-                <div 
-                  ref={editorScrollRef}
-                  className="flex-1 overflow-y-auto px-4 pb-32 arrow-scrollbar"
-                  onWheel={(e) => { e.stopPropagation(); e.currentTarget.scrollTop += e.deltaY; }}
-                >
+                <ScrollableWithArrows className="px-4 pb-32" downArrowOffset="bottom-24">
                   {existingDates.map((date) => (
                     <EditorBlock
                       key={`${activeNote.id}-${date}`}
@@ -202,7 +187,7 @@ function NotepadModal({ toggleNotes, notes, activeNoteId, addNote, updateNoteTit
                       onChange={(html) => updateNoteEntry(activeNote.id, date, html)}
                     />
                   ))}
-                </div>
+                </ScrollableWithArrows>
               </div>
             </div>
           )}

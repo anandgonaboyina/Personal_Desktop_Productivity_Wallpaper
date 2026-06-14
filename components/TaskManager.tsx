@@ -5,21 +5,15 @@ import { useDashboardStore } from '@/store/dashboardStore';
 import { Plus, Play, Trash2, CheckCircle, Circle, Clock } from 'lucide-react';
 import { fetchQuote } from '@/utils/quoteEngine';
 import DraggableWidget from './DraggableWidget';
+import ScrollableWithArrows from './ScrollableWithArrows';
 
 export default function TaskManager() {
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [newTaskDuration, setNewTaskDuration] = useState('25');
 
     const { tasks, addTask, toggleTask, deleteTask, triggerTimer, isTaskManagerOpen, showQuotePopup, editTaskDuration, updateTaskTitle } = useDashboardStore();
-    const taskScrollRef = useRef<HTMLDivElement>(null);
 
     if (!isTaskManagerOpen) return null;
-
-    const scrollBy = (ref: React.RefObject<HTMLDivElement | null>, direction: 'up' | 'down') => {
-        if (ref.current) {
-            ref.current.scrollBy({ top: direction === 'up' ? -150 : 150, behavior: 'smooth' });
-        }
-    };
 
     const handleToggleTask = async (id: string) => {
         const task = tasks.find(t => t.id === id);
@@ -57,24 +51,22 @@ export default function TaskManager() {
     return (
         <DraggableWidget id="tasks">
             <div className="w-80 rounded-3xl bg-white/10 backdrop-blur-3xl border border-white/20 shadow-2xl flex flex-col overflow-hidden text-white pointer-events-auto">
-                <div className="p-4 border-b border-white/10 bg-black/10 relative flex items-center justify-center">
-                    <h2 className="text-lg font-medium text-center tracking-wide cursor-grab active:cursor-grabbing w-full mr-[20px]">Tasks</h2>
-                    {totalRemainingMinutes > 0 && (
-                        <div
-                            className="absolute right-3 text-xs font-bold tracking-wider uppercase bg-blue-600/90 text-white border border-blue-400/50 px-3 py-1.5 rounded-xl pointer-events-none flex items-center gap-1.5 shadow-lg backdrop-blur-md"
-                        >
-                            <Clock size={14} className="mb-[1px] text-blue-200" />
-                            {formatRemainingTime(totalRemainingMinutes)}
-                        </div>
-                    )}
+                <div className="px-4 py-2.5 border-b border-white/10 bg-black/20 flex items-center justify-between cursor-grab active:cursor-grabbing">
+                    <h2 className="text-sm font-bold tracking-widest text-white uppercase drop-shadow-md">Tasks</h2>
+                    <div className="flex items-center gap-2.5 text-[9px] font-bold tracking-widest text-white/60 uppercase">
+                        <span>{tasks.filter(t => !t.completed).length} Pending</span>
+                        {totalRemainingMinutes > 0 && (
+                            <>
+                                <span className="w-1 h-1 rounded-full bg-white/20" />
+                                <span className="text-blue-300/90 flex items-center gap-1">
+                                    <Clock size={10} className="mb-[1px]" /> {formatRemainingTime(totalRemainingMinutes)}
+                                </span>
+                            </>
+                        )}
+                    </div>
                 </div>
 
-                <div className="relative flex-1 overflow-hidden flex flex-col">
-                    <div
-                        ref={taskScrollRef}
-                        className="flex-1 overflow-y-auto p-2 arrow-scrollbar max-h-[332px]"
-                        onWheel={(e) => { e.stopPropagation(); e.currentTarget.scrollTop += e.deltaY; }}
-                    >
+                <ScrollableWithArrows className="p-2 max-h-[332px]">
                         {tasks.length === 0 ? (
                             <div className="text-center text-white/40 p-4 text-sm">
                                 No tasks yet. Add one to focus!
@@ -159,9 +151,7 @@ export default function TaskManager() {
                                 ))}
                             </div>
                         )}
-                    </div>
-
-                </div>
+                </ScrollableWithArrows>
 
                 <form onSubmit={handleAddTask} className="p-3 border-t border-white/10 bg-black/10 flex gap-1">
                     <input

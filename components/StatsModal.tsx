@@ -3,6 +3,7 @@ import { useDashboardStore } from '@/store/dashboardStore';
 import { X, Flame, Calendar, Clock, BookOpen, GraduationCap, MessageCircle, ChevronDown, ChevronUp, CalendarDays } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getLocalDateString } from '@/utils/date';
+import ScrollableWithArrows from './ScrollableWithArrows';
 
 export default function StatsModal() {
   const { history, healthData, isStatsOpen, toggleStats } = useDashboardStore();
@@ -61,11 +62,11 @@ export default function StatsModal() {
 
   return (
     <div 
-      className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-8 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-4 pb-20 sm:p-8 sm:pb-24 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
       onClick={toggleStats}
     >
       <div 
-        className="relative w-full h-full max-w-6xl rounded-[2.5rem] bg-black/80 backdrop-blur-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 fade-in duration-300 flex flex-col"
+        className="relative w-full h-[85vh] max-h-[850px] max-w-6xl rounded-[2.5rem] bg-black/80 backdrop-blur-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 fade-in duration-300 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-orange-400 via-red-500 to-purple-600" />
@@ -87,7 +88,8 @@ export default function StatsModal() {
         <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
           
           {/* Sidebar: Overall Stats */}
-          <div className="md:w-[35%] lg:w-[30%] p-6 md:p-8 border-b md:border-b-0 md:border-r border-white/5 bg-black/40 overflow-y-auto arrow-scrollbar flex flex-col gap-6">
+          <div className="md:w-[35%] lg:w-[30%] border-b md:border-b-0 md:border-r border-white/5 bg-black/40 flex flex-col relative">
+            <ScrollableWithArrows className="p-6 md:p-8 flex flex-col gap-6">
             
             {/* Today */}
             <div className="p-8 rounded-[2rem] bg-gradient-to-br from-blue-500/20 to-blue-600/5 border border-blue-500/20 flex flex-col items-center justify-center text-center shadow-xl relative overflow-hidden group">
@@ -121,10 +123,12 @@ export default function StatsModal() {
                  </div>
                </div>
             </div>
+            </ScrollableWithArrows>
           </div>
 
           {/* Main Content: History */}
-          <div className="md:w-[65%] lg:w-[70%] p-6 md:p-8 overflow-y-auto arrow-scrollbar bg-transparent relative">
+          <div className="md:w-[65%] lg:w-[70%] bg-transparent relative flex flex-col">
+            <ScrollableWithArrows className="p-6 md:p-8">
             <h3 className="text-sm font-bold tracking-[0.2em] text-white/50 uppercase mb-6 sticky top-0 bg-black/80 backdrop-blur-xl p-4 rounded-2xl border border-white/5 z-10 shadow-lg text-center">
               Monthly & Daily Breakdown
             </h3>
@@ -244,6 +248,7 @@ export default function StatsModal() {
                 })
               )}
             </div>
+            </ScrollableWithArrows>
           </div>
         </div>
       </div>

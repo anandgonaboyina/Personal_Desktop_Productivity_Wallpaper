@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Trash, ListTodo, Calendar as CalendarIcon } from 'lucide-react';
 import { useDashboardStore } from '@/store/dashboardStore';
 import DraggableWidget from './DraggableWidget';
+import ScrollableWithArrows from './ScrollableWithArrows';
 
 export default function MiniCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -67,7 +68,7 @@ export default function MiniCalendar() {
               </button>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto space-y-2 pr-2 arrow-scrollbar max-h-[240px]">
+          <ScrollableWithArrows className="space-y-2 pr-2 max-h-[240px]">
             {sortedAllDeadlines.length === 0 && <div className="text-white/40 text-sm text-center mt-6 italic">No upcoming deadlines</div>}
             {sortedAllDeadlines.map(d => (
               <div key={d.id} className="flex flex-col gap-1 bg-white/5 hover:bg-white/10 p-3 rounded-xl border border-white/10 transition-colors group">
@@ -88,7 +89,7 @@ export default function MiniCalendar() {
                 <span className="text-white/90 text-sm leading-snug">{d.text || <span className="text-white/30 italic">Empty deadline</span>}</span>
               </div>
             ))}
-          </div>
+          </ScrollableWithArrows>
         </div>
       ) : selectedDate ? (
         <div className="flex flex-col h-full flex-1 animate-in slide-in-from-bottom-4 duration-300">
@@ -114,7 +115,7 @@ export default function MiniCalendar() {
               </button>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto space-y-2 pr-2 arrow-scrollbar max-h-[220px]">
+          <ScrollableWithArrows className="space-y-2 pr-2 max-h-[220px]">
             {dayDeadlines.length === 0 && <div className="text-white/40 text-xs text-center my-2">No deadlines set for this day.</div>}
             {dayDeadlines.map(d => (
               <div key={d.id} className="flex gap-2 items-center bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 focus-within:border-blue-500/30 transition-all group shadow-sm">
@@ -141,7 +142,7 @@ export default function MiniCalendar() {
                 </button>
               </div>
             ))}
-          </div>
+          </ScrollableWithArrows>
           <div className="mt-2 pt-2 border-t border-white/10">
             <button
               onClick={() => addDeadline(selectedDate, "")}

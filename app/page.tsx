@@ -251,16 +251,16 @@ export default function Dashboard() {
       {/* Bottom Right Container */}
       <div className="absolute right-2 z-50 flex items-end transition-all duration-300 pointer-events-none" style={{ bottom: `${rightWidgetsOffset}px` }}>
         {/* TaskManager & Timer Group */}
-        <div className="flex flex-col items-end gap-2 pointer-events-auto mr-[10px]">
+        <div className="flex flex-col items-end gap-2 pointer-events-none mr-[10px]">
           {(!isHidden || !hideConfig.tasks) && showTasks && <TaskManager />}
-          <div className="flex flex-row items-start gap-3">
+          <div className="flex flex-row items-start gap-3 pointer-events-none">
             {(!isHidden || !hideConfig.stopwatch) && showStopwatch && <Stopwatch />}
             {(!isHidden || !hideConfig.timer) && showTimer && <Timer />}
           </div>
         </div>
         
         {/* Vertical Icons Toolbar */}
-        <div className="pointer-events-auto">
+        <div className="pointer-events-none">
           <RightToolbar />
         </div>
       </div>
@@ -270,6 +270,7 @@ export default function Dashboard() {
 
       {/* Auto Update Checker (Runs silently on boot) */}
       <StartupUpdateChecker />
+
     </main>
   );
 }

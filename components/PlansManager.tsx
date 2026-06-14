@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useDashboardStore, Plan, SubTopic } from '@/store/dashboardStore';
-import { Target, Plus, X, Upload, ChevronLeft, CheckCircle, Circle, Trash2, Map, Calendar, Clock, Filter, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { Target, Plus, X, Upload, ChevronLeft, CheckCircle, Circle, Trash2, Map, Calendar, Clock, Filter, ChevronRight, ChevronDown } from 'lucide-react';
+import ScrollableWithArrows from './ScrollableWithArrows';
 
 const CATEGORY_SUGGESTIONS = ['DSA', 'Web Dev', 'Academics', 'Projects', 'Personal'];
 
@@ -27,13 +28,6 @@ function PlansEditor() {
   const [view, setView] = useState<'gallery' | 'add' | 'detail'>('gallery');
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>('All');
-  const mainScrollRef = useRef<HTMLDivElement>(null);
-
-  const scrollBy = (ref: React.RefObject<HTMLDivElement | null>, direction: 'up' | 'down') => {
-    if (ref.current) {
-      ref.current.scrollBy({ top: direction === 'up' ? -200 : 200, behavior: 'smooth' });
-    }
-  };
 
   // Get unique categories for filter
   const allCategories = Array.from(new Set(plans.map(p => p.category)));
@@ -56,10 +50,10 @@ function PlansEditor() {
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300 pointer-events-auto">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 pb-20 sm:pb-24 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300 pointer-events-auto">
       <div className="absolute inset-0" onClick={togglePlans} />
 
-      <div className="relative w-full max-w-5xl h-[85vh] flex flex-col rounded-3xl bg-black/60 backdrop-blur-2xl border border-white/20 shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+      <div className="relative w-full max-w-5xl h-[85vh] max-h-[850px] flex flex-col rounded-3xl bg-black/60 backdrop-blur-2xl border border-white/20 shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300">
 
         {/* Header */}
         <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5 shrink-0">
@@ -107,16 +101,7 @@ function PlansEditor() {
 
         {/* Content Area */}
         <div className="relative flex-1 overflow-hidden flex flex-col">
-          <div
-            ref={mainScrollRef}
-            className={`flex-1 p-6 ${view === 'detail' ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain arrow-scrollbar'}`}
-            onWheel={e => {
-              if (view !== 'detail') {
-                e.stopPropagation();
-                e.currentTarget.scrollTop += e.deltaY;
-              }
-            }}
-          >
+          <ScrollableWithArrows className={`p-6 ${view === 'detail' ? 'overflow-hidden' : ''}`} hideArrows={view === 'detail'}>
             {view === 'gallery' && (
               <GalleryView
                 groupedPlans={groupedPlans}
@@ -140,9 +125,7 @@ function PlansEditor() {
                 onDeletePlan={() => { deletePlan(selectedPlan.id); setView('gallery'); }}
               />
             )}
-          </div>
-
-
+          </ScrollableWithArrows>
         </div>
       </div>
     </div>
@@ -388,13 +371,6 @@ function DetailView({ plan, onAddSub, onToggleSub, onDeleteSub, onDeletePlan }: 
   const [isEditing, setIsEditing] = useState(false);
   const [editDuration, setEditDuration] = useState(plan.duration);
   const [editEndDate, setEditEndDate] = useState(plan.endDate);
-  const checklistScrollRef = useRef<HTMLDivElement>(null);
-
-  const scrollBy = (ref: React.RefObject<HTMLDivElement | null>, direction: 'up' | 'down') => {
-    if (ref.current) {
-      ref.current.scrollBy({ top: direction === 'up' ? -200 : 200, behavior: 'smooth' });
-    }
-  };
 
   const submitSub = (e: React.FormEvent) => {
     e.preventDefault();
@@ -509,11 +485,7 @@ function DetailView({ plan, onAddSub, onToggleSub, onDeleteSub, onDeletePlan }: 
         </h3>
 
         <div className="relative flex-1 overflow-hidden flex flex-col">
-          <div
-            ref={checklistScrollRef}
-            className="flex-1 overflow-y-auto pr-2 flex flex-col gap-2 overscroll-contain arrow-scrollbar"
-            onWheel={e => { e.stopPropagation(); e.currentTarget.scrollTop += e.deltaY; }}
-          >
+          <ScrollableWithArrows className="p-2 flex flex-col gap-2 pr-1">
             {plan.subTopics.length === 0 ? (
               <div className="h-full flex items-center justify-center text-white/30 italic text-center px-8">
                 No action items yet. Break your ambitious plan down into small, conquerable steps below!
@@ -540,7 +512,7 @@ function DetailView({ plan, onAddSub, onToggleSub, onDeleteSub, onDeletePlan }: 
                 </div>
               ))
             )}
-          </div>
+          </ScrollableWithArrows>
 
 
         </div>
