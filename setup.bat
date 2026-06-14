@@ -397,7 +397,10 @@ echo Once installed:
 echo 1. Open Lively Wallpaper.
 echo 2. Click 'Add Wallpaper' (+) at the top right.
 echo 3. Choose 'Enter URL' and type: http://localhost:4321
-echo 4. Click the arrow to save and apply.
+echo 4. Click the right-arrow symbol next to it.
+echo 5. It will ask for a Title: type "Productive Wallpaper" (or any name).
+echo 6. Leave Description and Author blank, and click 'OK'.
+echo 7. Finally, click on the new wallpaper we just added to apply it!
 echo ========================================================
 echo.
 
