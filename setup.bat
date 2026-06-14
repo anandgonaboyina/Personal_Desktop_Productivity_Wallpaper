@@ -1,23 +1,15 @@
 @echo off
 setlocal EnableDelayedExpansion
-cd /d "%~dp0"
 
-:: 1. Check for Administrator privileges
+:: 1. Auto-Elevate to Administrator
 net session >nul 2>&1
 if %errorLevel% neq 0 (
-    color 4F
-    echo ========================================================
-    echo  ERROR: ADMINISTRATOR PRIVILEGES REQUIRED
-    echo ========================================================
-    echo This setup script requires Administrator privileges to
-    echo configure Task Scheduler and access WindowsApps folder.
-    echo.
-    echo Please right-click "setup.bat" and select:
-    echo "Run as administrator"
-    echo ========================================================
-    pause
+    echo Requesting Administrator privileges...
+    powershell -Command "Start-Process '%~f0' -Verb RunAs"
     exit /b
 )
+
+cd /d "%~dp0"
 
 color 0B
 
@@ -49,51 +41,57 @@ echo REQUIREMENTS BEFORE PROCEEDING:
 echo - An active INTERNET connection is required right now.
 echo.
 echo If anything goes wrong during setup, safely close this
-echo window and run setup.bat again as Administrator.
+echo window and run setup.bat again.
 echo.
 pause
+
+echo.
+echo Stopping any existing background instances to prevent file locks...
+call taskkill /F /IM livelywpf.exe >nul 2>&1
+call taskkill /F /IM Lively.exe >nul 2>&1
+call npx -y kill-port 4321 >nul 2>&1
 
 echo.
 echo [1/5] Checking Dependencies (Node.js ^& Git)...
 
 :: Check Node.js
 node -v >nul 2>&1
-if %errorlevel% neq 0 (
+if !errorlevel! neq 0 (
     echo Node.js is not installed. Downloading Official Installer...
     curl -o node-installer.msi https://nodejs.org/dist/v20.14.0/node-v20.14.0-x64.msi
-    if %errorlevel% neq 0 (
+    if !errorlevel! neq 0 (
         echo ERROR: Failed to download Node.js. Check your internet connection.
         pause
         exit /b 1
     )
-    echo Installing Node.js silently (this may take a minute)...
-    msiexec /i node-installer.msi /quiet /qn /norestart
+    echo Installing Node.js silently, this may take a minute...
+    start /wait msiexec /i node-installer.msi /quiet /qn /norestart
     echo Node.js installed successfully!
     del node-installer.msi
     
     :: Temporarily add Node to the current session's PATH so the script can continue immediately
-    set "PATH=%PATH%;C:\Program Files\nodejs"
+    set "PATH=!PATH!;C:\Program Files\nodejs"
 ) else (
     echo Node.js is already installed!
 )
 
 :: Check Git
 git --version >nul 2>&1
-if %errorlevel% neq 0 (
+if !errorlevel! neq 0 (
     echo Git is not installed. Downloading Official Installer...
     curl -L -o git-installer.exe https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/Git-2.45.2-64-bit.exe
-    if %errorlevel% neq 0 (
+    if !errorlevel! neq 0 (
         echo ERROR: Failed to download Git. Check your internet connection.
         pause
         exit /b 1
     )
     echo Installing Git silently...
-    git-installer.exe /VERYSILENT /NORESTART /NOCANCEL /SP-
+    start /wait "" git-installer.exe /VERYSILENT /NORESTART /NOCANCEL /SP-
     echo Git installed successfully!
     del git-installer.exe
     
     :: Temporarily add Git to the current session's PATH so the script can continue immediately
-    set "PATH=%PATH%;C:\Program Files\Git\cmd"
+    set "PATH=!PATH!;C:\Program Files\Git\cmd"
 ) else (
     echo Git is already installed!
 )
@@ -123,7 +121,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo [4/5] Building the dashboard for production...
-call npx next build --webpack
+call npx next build
 if %errorlevel% neq 0 (
     color 0C
     echo ERROR: Failed to build the dashboard.
@@ -194,12 +192,12 @@ if "%CURRENT_DIR:~-1%"=="\" set "CURRENT_DIR=%CURRENT_DIR:~0,-1%"
 
 echo Generating start-server.vbs (30s delay)...
 echo Set WshShell = CreateObject("WScript.Shell") > start-server.vbs
-echo If WScript.Arguments.Count > 0 Then >> start-server.vbs
+echo If WScript.Arguments.Count ^> 0 Then >> start-server.vbs
 echo     If WScript.Arguments(0) = "boot" Then >> start-server.vbs
 echo         WScript.Sleep 30000 >> start-server.vbs
 echo     End If >> start-server.vbs
 echo End If >> start-server.vbs
-echo WshShell.CurrentDirectory = "%CD%" >> start-server.vbs
+echo WshShell.CurrentDirectory = "%CURRENT_DIR%" >> start-server.vbs
 echo WshShell.Run "npm start", 0, False >> start-server.vbs
 
 echo Generating start-lively.vbs (60s delay)...
@@ -235,7 +233,7 @@ echo   ^</Triggers^>
 echo   ^<Principals^>
 echo     ^<Principal id="Author"^>
 echo       ^<LogonType^>InteractiveToken^</LogonType^>
-echo       ^<RunLevel^>LeastPrivilege^</RunLevel^>
+echo       ^<RunLevel^>HighestAvailable^</RunLevel^>
 echo     ^</Principal^>
 echo   ^</Principals^>
 echo   ^<Settings^>
@@ -286,7 +284,7 @@ echo   ^</Triggers^>
 echo   ^<Principals^>
 echo     ^<Principal id="Author"^>
 echo       ^<LogonType^>InteractiveToken^</LogonType^>
-echo       ^<RunLevel^>LeastPrivilege^</RunLevel^>
+echo       ^<RunLevel^>HighestAvailable^</RunLevel^>
 echo     ^</Principal^>
 echo   ^</Principals^>
 echo   ^<Settings^>
@@ -379,12 +377,11 @@ echo.
 
 :confirmLively
 set /p livelyConfirm="Have you downloaded and installed Lively Wallpaper using the provided link? Type 'yes' to confirm: "
-if /i not "%livelyConfirm%"=="yes" goto confirmLively
+if /i not "!livelyConfirm!"=="yes" goto confirmLively
 
 echo.
 :confirm
 set /p userConfirm="Have you read everything carefully? Type 'yes' to continue and close: "
-if /i not "%userConfirm%"=="yes" goto confirm
+if /i not "!userConfirm!"=="yes" goto confirm
 
 exit
-
