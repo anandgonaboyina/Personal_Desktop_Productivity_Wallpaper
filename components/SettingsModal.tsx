@@ -11,7 +11,31 @@ const DEFAULT_WALLPAPERS = [
 ];
 
 export default function SettingsModal() {
-  const { settingsActiveTab, setSettingsActiveTab, isSettingsOpen, toggleSettings, is24HourClock, toggle24HourClock, currentBgSrc, hiddenWallpapers, toggleWallpaperVisibility, showHealth, showQuote, showTimer, showCountdowns, showVideoControls, showClock, showTasks, showCalendar, showTodayWork, showStats, showPlans, showNotes, showTimetable, showDock, showDeadlineAlerts, showBgSwitcher, showSettingsBtn, showStopwatch, toggleVisibility, isSlideshowEnabled, setIsSlideshowEnabled, slideshowIntervalMins, setSlideshowIntervalMins, lockedWidgets, toggleWidgetLock, resetAllOffsets, clearOldData, clearAllData, lockedWallpaper, setLockedWallpaper, deadlineAlertDays, setDeadlineAlertDays, hideConfig, setHideConfig, setHideAll, rightWidgetsOffset, setRightWidgetsOffset, alarmSound, setAlarmSound, alarmDurationSecs, setAlarmDurationSecs, alarmVolume, setAlarmVolume } = useDashboardStore();
+  const { settingsActiveTab, setSettingsActiveTab, isSettingsOpen, toggleSettings, is24HourClock, toggle24HourClock, currentBgSrc, hiddenWallpapers, toggleWallpaperVisibility, showHealth, showQuote, showTimer, showCountdowns, showVideoControls, showClock, showTasks, showCalendar, showTodayWork, showStats, showPlans, showNotes, showTimetable, showDock, showDeadlineAlerts, showBgSwitcher, showSettingsBtn, showStopwatch, toggleVisibility, isSlideshowEnabled, setIsSlideshowEnabled, slideshowIntervalMins, setSlideshowIntervalMins, lockedWidgets, toggleWidgetLock, resetAllOffsets, clearOldData, clearAllData, lockedWallpaper, setLockedWallpaper, deadlineAlertDays, setDeadlineAlertDays, hideConfig, setHideConfig, setHideAll, rightWidgetsOffset, setRightWidgetsOffset, alarmSound, setAlarmSound, alarmDurationSecs, setAlarmDurationSecs, alarmVolume, setAlarmVolume, toggleHide, panicShortcutKey, setPanicShortcutKey, focusShortcutKey, setFocusShortcutKey, togglePanicHide, panicWallpaperSwitch, setPanicWallpaperSwitch } = useDashboardStore();
+
+  const handleShortcutCapture = (e: React.KeyboardEvent<HTMLInputElement>, setter: (val: string) => void) => {
+    e.preventDefault();
+    const key = e.key.toLowerCase();
+    if (key === 'control' || key === 'shift' || key === 'alt' || key === 'meta') return;
+    if (key === 'escape') {
+      e.currentTarget.blur();
+      return;
+    }
+    const parts = [];
+    if (e.ctrlKey) parts.push('ctrl');
+    if (e.altKey) parts.push('alt');
+    if (e.shiftKey) parts.push('shift');
+    parts.push(key === ' ' ? 'space' : key);
+    setter(parts.join('+'));
+    e.currentTarget.blur();
+  };
+
+  const formatShortcutText = (shortcut: string) => {
+    if (!shortcut) return '';
+    let val = shortcut;
+    if (!val.includes('+') && val.length === 1) val = 'ctrl+' + val;
+    return val.toUpperCase().replace(/\+/g, ' + ');
+  };
 
   const [deleteDays, setDeleteDays] = useState<number>(60);
   const upiId = 'gonaboyinaanandkumar@ybl';
@@ -1219,18 +1243,11 @@ export default function SettingsModal() {
                           </button>
                         </div>
 
-                        {/* Settings Button */}
-                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
-                          <div className="flex items-center gap-3">
-                            <SettingsIcon size={18} className="text-gray-400" />
-                            <span className="text-sm font-medium">Settings Button</span>
-                          </div>
-                          <button onClick={() => toggleVisibility('showSettingsBtn')} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showSettingsBtn ? 'bg-blue-500' : 'bg-white/20'}`}>
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showSettingsBtn ? 'translate-x-6' : 'translate-x-1'}`} />
-                          </button>
-                        </div>
+
                       </div>
                     </div>
+
+
                   </div>
                 </div>
               )}
@@ -1344,23 +1361,91 @@ export default function SettingsModal() {
                 <div className="flex flex-col gap-6">
                   <div>
                     <h3 className="text-xl font-semibold flex items-center gap-2"><EyeOff className="text-red-400" /> Focus & Panic Mode</h3>
-                    <p className="text-white/50 text-sm mt-1">Configure what elements disappear instantly when you need privacy.</p>
+                    <p className="text-white/50 text-sm mt-1">Configure your screen visibility and customize shortcuts.</p>
+                  </div>
+
+                  {/* Screen Visibility & Shortcuts */}
+                  <div className="flex flex-col p-4 rounded-2xl bg-black/20 border border-white/5 mt-2 gap-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-lg">Screen Visibility Shortcuts</h4>
+                    </div>
+                    
+                    {/* Panic Mode */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/5 p-3 rounded-xl">
+                      <div>
+                        <p className="text-sm font-bold text-red-400">Panic Mode (Hide Everything)</p>
+                        <p className="text-xs text-white/50">Instantly hide all widgets from your screen.</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={formatShortcutText(panicShortcutKey)}
+                            onKeyDown={(e) => handleShortcutCapture(e, setPanicShortcutKey)}
+                            readOnly
+                            placeholder="Press keys..."
+                            className="w-48 h-9 px-2 bg-black/40 border border-white/10 rounded-lg text-center text-white outline-none focus:border-red-400 focus:bg-white/10 cursor-pointer font-bold uppercase text-xs"
+                            title="Click to record new shortcut"
+                          />
+                          <button
+                            onClick={() => togglePanicHide()}
+                            className="ml-2 px-3 py-2 bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white rounded-lg transition-colors border border-red-500/30 text-xs font-bold uppercase tracking-wide"
+                          >
+                            Trigger
+                          </button>
+                        </div>
+                        <span className="text-[10px] text-white/40 italic">Click input and press any key combo (e.g. Ctrl+Alt+Z)</span>
+                      </div>
+                    </div>
+
+                    {/* Panic Wallpaper Switch */}
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                      <div className="flex items-center gap-3">
+                        <ImageIcon size={18} className="text-red-400" />
+                        <div>
+                          <span className="text-sm font-medium">Switch to Photo Wallpaper on Panic</span>
+                          <p className="text-xs text-white/50">If a video wallpaper is playing, switch to a photo instantly.</p>
+                        </div>
+                      </div>
+                      <button onClick={() => setPanicWallpaperSwitch(!panicWallpaperSwitch)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${panicWallpaperSwitch ? 'bg-red-500' : 'bg-white/20'}`}>
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${panicWallpaperSwitch ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+
+                    {/* Focus Mode */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/5 p-3 rounded-xl">
+                      <div>
+                        <p className="text-sm font-bold text-blue-400">Focus Mode (Hide Selected)</p>
+                        <p className="text-xs text-white/50">Hide only the widgets enabled in 'Widget Visibility'.</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={formatShortcutText(focusShortcutKey)}
+                            onKeyDown={(e) => handleShortcutCapture(e, setFocusShortcutKey)}
+                            readOnly
+                            placeholder="Press keys..."
+                            className="w-48 h-9 px-2 bg-black/40 border border-white/10 rounded-lg text-center text-white outline-none focus:border-blue-400 focus:bg-white/10 cursor-pointer font-bold uppercase text-xs"
+                            title="Click to record new shortcut"
+                          />
+                          <button
+                            onClick={() => toggleHide()}
+                            className="ml-2 px-3 py-2 bg-blue-500/20 hover:bg-blue-500 text-blue-300 hover:text-white rounded-lg transition-colors border border-blue-500/30 text-xs font-bold uppercase tracking-wide"
+                          >
+                            Trigger
+                          </button>
+                        </div>
+                        <span className="text-[10px] text-white/40 italic">Click input and press any key combo (e.g. Ctrl+H)</span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Focus Mode Configuration */}
                   <div className="flex flex-col p-4 rounded-2xl bg-black/20 border border-white/5 mt-2">
-                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl mb-5">
-                      <h4 className="font-semibold text-red-300">Keyboard Shortcuts</h4>
-                      <p className="text-sm text-white/80 mt-1 leading-relaxed">
-                        Press <strong>Ctrl + H</strong> to instantly hide the selected widgets.
-                        <br />
-                        If <span className="text-red-400 font-bold">ALL</span> items are set to hide (Panic Mode), you must press <strong>Ctrl + Shift + H</strong> to make them reappear. Otherwise, a normal <strong>Ctrl + H</strong> will toggle them back.
-                      </p>
-                    </div>
-
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
                       <div>
-                        <h4 className="font-medium text-lg text-red-400">Widget Selection</h4>
+                        <h4 className="font-medium text-lg text-red-400">Focus Mode Specific Selection</h4>
                         <p className="text-sm text-white/50 mt-1">Select which elements should be hidden when you activate Focus Mode.</p>
                       </div>
                       <div className="flex gap-2 shrink-0">
@@ -1395,6 +1480,7 @@ export default function SettingsModal() {
                         clock: 'Big Clock',
                         deadlineAlerts: 'Deadline Alerts',
                         bgSwitcher: 'Background Switcher',
+                        stopwatch: 'Stopwatch',
                         settingsBtn: 'Settings Button',
                         videoControls: 'Video Controls'
                       }).map(([key, label]) => (
@@ -1409,6 +1495,8 @@ export default function SettingsModal() {
                   </div>
                 </div>
               )}
+
+
 
               {settingsActiveTab === 'data' && (
                 <div className="flex flex-col gap-6">

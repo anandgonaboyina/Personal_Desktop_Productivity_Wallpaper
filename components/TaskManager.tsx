@@ -10,6 +10,8 @@ import ScrollableWithArrows from './ScrollableWithArrows';
 export default function TaskManager() {
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [newTaskDuration, setNewTaskDuration] = useState('25');
+    const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+    const [editingDurationId, setEditingDurationId] = useState<string | null>(null);
 
     const { tasks, addTask, toggleTask, deleteTask, triggerTimer, isTaskManagerOpen, showQuotePopup, editTaskDuration, updateTaskTitle } = useDashboardStore();
 
@@ -86,39 +88,79 @@ export default function TaskManager() {
                                                 </button>
                                             </div>
                                             <div className="flex flex-col gap-1.5 flex-1 min-w-0 w-full ml-0.5">
-                                                <textarea
-                                                    ref={(el) => {
-                                                        if (el) {
-                                                            el.style.height = 'auto';
-                                                            el.style.height = el.scrollHeight + 'px';
-                                                        }
-                                                    }}
-                                                    value={task.title}
-                                                    onChange={(e) => {
-                                                        e.target.style.height = 'auto';
-                                                        e.target.style.height = e.target.scrollHeight + 'px';
-                                                        updateTaskTitle(task.id, e.target.value);
-                                                    }}
-                                                    rows={1}
-                                                    spellCheck={false}
-                                                    className={`bg-transparent outline-none w-full text-sm leading-snug border-b border-transparent focus:border-white/20 transition-colors px-1 -mx-1 resize-none overflow-hidden block ${task.completed ? 'line-through text-white/50' : 'text-white'}`}
-                                                />
+                                                {editingTaskId === task.id ? (
+                                                    <textarea
+                                                        autoFocus
+                                                        onBlur={() => setEditingTaskId(null)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                                e.preventDefault();
+                                                                setEditingTaskId(null);
+                                                            }
+                                                        }}
+                                                        ref={(el) => {
+                                                            if (el) {
+                                                                el.style.height = 'auto';
+                                                                el.style.height = el.scrollHeight + 'px';
+                                                            }
+                                                        }}
+                                                        value={task.title}
+                                                        onChange={(e) => {
+                                                            e.target.style.height = 'auto';
+                                                            e.target.style.height = e.target.scrollHeight + 'px';
+                                                            updateTaskTitle(task.id, e.target.value);
+                                                        }}
+                                                        rows={1}
+                                                        spellCheck={false}
+                                                        className={`bg-black/40 outline-none w-full text-sm leading-snug border-b border-white/20 px-1 -mx-1 resize-none overflow-hidden block text-white rounded`}
+                                                    />
+                                                ) : (
+                                                    <div 
+                                                        onDoubleClick={() => setEditingTaskId(task.id)}
+                                                        title="Double click to edit"
+                                                        className={`w-full text-sm leading-snug px-1 -mx-1 cursor-grab whitespace-pre-wrap ${task.completed ? 'line-through text-white/50' : 'text-white'}`}
+                                                    >
+                                                        {task.title}
+                                                    </div>
+                                                )}
                                                 <div className="flex items-center gap-1.5 mt-0.5 overflow-hidden w-full">
                                                     {task.duration > 0 && !task.completed && (
-                                                        <span
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                const newDur = window.prompt(`Enter new duration (in minutes) for "${task.title}":`, task.duration.toString());
-                                                                if (newDur !== null) {
-                                                                    const dur = parseInt(newDur);
-                                                                    if (!isNaN(dur)) editTaskDuration(task.id, dur);
-                                                                }
-                                                            }}
-                                                            className="shrink-0 text-[11px] font-semibold tracking-wide text-white/90 bg-blue-500/40 hover:bg-blue-500/60 cursor-pointer px-2 py-0.5 rounded-full border border-blue-400/30 transition-colors shadow-sm"
-                                                            title="Click to edit duration"
-                                                        >
-                                                            {task.duration >= 60 ? Math.floor(task.duration / 60) + "h " + (task.duration % 60) + "m" : task.duration + "m"} left
-                                                        </span>
+                                                        editingDurationId === task.id ? (
+                                                            <div className="shrink-0 flex items-center bg-blue-500/40 rounded-full border border-blue-400/30 px-2 py-0.5 shadow-sm">
+                                                                <input
+                                                                    autoFocus
+                                                                    type="number"
+                                                                    defaultValue={task.duration}
+                                                                    min="1"
+                                                                    max="999"
+                                                                    className="w-10 bg-transparent text-[11px] font-semibold text-white outline-none placeholder:text-white/50 text-center"
+                                                                    onBlur={(e) => {
+                                                                        const dur = parseInt(e.target.value);
+                                                                        if (!isNaN(dur) && dur > 0) editTaskDuration(task.id, dur);
+                                                                        setEditingDurationId(null);
+                                                                    }}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === 'Enter') {
+                                                                            const dur = parseInt(e.currentTarget.value);
+                                                                            if (!isNaN(dur) && dur > 0) editTaskDuration(task.id, dur);
+                                                                            setEditingDurationId(null);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <span className="text-[11px] font-semibold text-white/90 ml-0.5">m</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span
+                                                                onDoubleClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setEditingDurationId(task.id);
+                                                                }}
+                                                                className="shrink-0 text-[11px] font-semibold tracking-wide text-white/90 bg-blue-500/40 hover:bg-blue-500/60 cursor-pointer px-2 py-0.5 rounded-full border border-blue-400/30 transition-colors shadow-sm"
+                                                                title="Double click to edit duration"
+                                                            >
+                                                                {task.duration >= 60 ? Math.floor(task.duration / 60) + "h " + (task.duration % 60) + "m" : task.duration + "m"} left
+                                                            </span>
+                                                        )
                                                     )}
                                                     {task.timeSpent !== undefined && task.timeSpent > 0 && !task.completed && (
                                                         <span

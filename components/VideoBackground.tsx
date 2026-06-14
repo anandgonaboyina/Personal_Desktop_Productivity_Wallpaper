@@ -17,6 +17,8 @@ export default function VideoBackground() {
   const setIsVideoPlaying = useDashboardStore((state) => state.setIsVideoPlaying);
   const showVideoControls = useDashboardStore((state) => state.showVideoControls);
   const isHidden = useDashboardStore((state) => state.isHidden);
+  const isPanicHidden = useDashboardStore((state) => state.isPanicHidden);
+  const panicWallpaperSwitch = useDashboardStore((state) => state.panicWallpaperSwitch);
   const hideConfig = useDashboardStore((state) => state.hideConfig);
 
   const isSlideshowEnabled = useDashboardStore((state) => state.isSlideshowEnabled);
@@ -69,6 +71,14 @@ export default function VideoBackground() {
     const lockedBg = backgrounds.find(bg => bg.filename === lockedWallpaper);
     if (lockedBg) {
       currentBg = lockedBg;
+    }
+  }
+
+  // Handle Panic Mode Wallpaper Switch
+  if (isPanicHidden && panicWallpaperSwitch && currentBg?.type === 'video') {
+    const fallbackImage = backgrounds.find(bg => bg.type === 'image');
+    if (fallbackImage) {
+      currentBg = fallbackImage;
     }
   }
 
@@ -145,7 +155,7 @@ export default function VideoBackground() {
             }}
           />
           {/* Controls */}
-          {(!isHidden || !hideConfig.videoControls) && showVideoControls && (
+          {!isPanicHidden && (!isHidden || !hideConfig.videoControls) && showVideoControls && (
             <>
               <div className="absolute top-6 left-20 z-50 flex gap-2">
                 {/* Play/Pause Toggle Button */}

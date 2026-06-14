@@ -231,6 +231,15 @@ interface DashboardState {
   hideConfig: Record<string, boolean>;
   setHideConfig: (key: string, value: boolean) => void;
   setHideAll: (hide: boolean) => void;
+  
+  isPanicHidden: boolean;
+  togglePanicHide: () => void;
+  panicShortcutKey: string;
+  setPanicShortcutKey: (key: string) => void;
+  focusShortcutKey: string;
+  setFocusShortcutKey: (key: string) => void;
+  panicWallpaperSwitch: boolean;
+  setPanicWallpaperSwitch: (val: boolean) => void;
 
   // Custom Placement
   rightWidgetsOffset: number;
@@ -749,6 +758,15 @@ export const useDashboardStore = create<DashboardState>()(
         return { hideConfig: newHideConfig };
       }),
 
+      isPanicHidden: false,
+      togglePanicHide: () => set((state) => ({ isPanicHidden: !state.isPanicHidden })),
+      panicShortcutKey: 'ctrl+z',
+      setPanicShortcutKey: (key) => set({ panicShortcutKey: key.toLowerCase() }),
+      focusShortcutKey: 'ctrl+h',
+      setFocusShortcutKey: (key) => set({ focusShortcutKey: key.toLowerCase() }),
+      panicWallpaperSwitch: false,
+      setPanicWallpaperSwitch: (val) => set({ panicWallpaperSwitch: val }),
+
       rightWidgetsOffset: 48, // Default corresponds to bottom-12 (48px)
       setRightWidgetsOffset: (offset) => set({ rightWidgetsOffset: Math.max(0, offset) }),
 
@@ -803,6 +821,25 @@ export const useDashboardStore = create<DashboardState>()(
     {
       name: 'dashboard-storage',
       storage: fileStorage,
+      version: 2, // Store schema version
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2) {
+          // Schema Migration V2: Fix legacy tasks to prevent .toUpperCase() crashes
+          if (persistedState.tasks && Array.isArray(persistedState.tasks)) {
+            persistedState.tasks = persistedState.tasks.map((task: any) => ({
+              ...task,
+              priority: task.priority || 'medium', // Ensure priority always exists
+              tags: task.tags || [],               // Ensure tags always exist
+              subtasks: task.subtasks || [],       // Ensure subtasks always exist
+            }));
+          }
+          // Ensure hideConfig is a safe object
+          if (!persistedState.hideConfig) {
+            persistedState.hideConfig = {};
+          }
+        }
+        return persistedState;
+      },
       partialize: (state) => Object.fromEntries(
         Object.entries(state).filter(([key]) => ![
           'isQuotePopupOpen', 'isTaskManagerOpen', 'isStatsOpen', 'timerTrigger', 
@@ -833,6 +870,11 @@ export const useDashboardStore = create<DashboardState>()(
           persistedState.activeTaskTitle = currentState.activeTaskTitle;
           persistedState.timerLastSavedChunks = currentState.timerLastSavedChunks;
           persistedState.timerLastUpdated = currentState.timerLastUpdated;
+        }
+
+        // Deep merge nested configurations to prevent schema drift from old backups
+        if (persistedState.hideConfig && currentState.hideConfig) {
+          persistedState.hideConfig = { ...currentState.hideConfig, ...persistedState.hideConfig };
         }
 
         return { ...currentState, ...persistedState };

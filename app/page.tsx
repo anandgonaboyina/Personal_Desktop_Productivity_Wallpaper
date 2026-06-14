@@ -57,32 +57,46 @@ export default function Dashboard() {
   const toggleSettings = useDashboardStore((state) => state.toggleSettings);
   const _hasHydrated = useDashboardStore((state) => state._hasHydrated);
 
+  const isPanicHidden = useDashboardStore((state) => state.isPanicHidden);
+  const togglePanicHide = useDashboardStore((state) => state.togglePanicHide);
+  const panicShortcutKey = useDashboardStore((state) => state.panicShortcutKey);
+  const focusShortcutKey = useDashboardStore((state) => state.focusShortcutKey);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const isFullPanic = Object.values(hideConfig).every(v => v === true);
+      // Don't trigger if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      // Ctrl + Shift + H (Force unhide)
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'h') {
+      // Legacy normalization for old saves
+      let fKey = focusShortcutKey;
+      if (!fKey.includes('+') && fKey.length === 1) fKey = 'ctrl+' + fKey;
+      let pKey = panicShortcutKey;
+      if (!pKey.includes('+') && pKey.length === 1) pKey = 'ctrl+' + pKey;
+
+      const checkShortcut = (ev: KeyboardEvent, shortcut: string) => {
+        const parts = shortcut.split('+');
+        const key = parts.pop();
+        const ctrl = parts.includes('ctrl');
+        const alt = parts.includes('alt');
+        const shift = parts.includes('shift');
+        return ev.ctrlKey === ctrl && ev.altKey === alt && ev.shiftKey === shift && ev.key.toLowerCase() === key;
+      };
+
+      // Focus Mode Shortcut
+      if (checkShortcut(e, fKey)) {
         e.preventDefault();
-        if (isHidden) toggleHide();
-        return;
+        toggleHide();
       }
 
-      // Ctrl + H (Normal toggle)
-      if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'h') {
+      // Panic Mode Shortcut
+      if (checkShortcut(e, pKey)) {
         e.preventDefault();
-        if (!isHidden) {
-          // Always allow hiding
-          toggleHide();
-        } else if (!isFullPanic) {
-          // If hidden, only allow unhiding with Ctrl+H if NOT in full panic mode
-          toggleHide();
-        }
+        togglePanicHide();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleHide, isHidden, hideConfig]);
+  }, [toggleHide, isHidden, hideConfig, togglePanicHide, isPanicHidden, panicShortcutKey, focusShortcutKey]);
 
   useEffect(() => {
     // Show initial quote after 5 seconds of loading the dashboard
@@ -135,135 +149,138 @@ export default function Dashboard() {
   return (
     <main className="relative overflow-hidden w-full flex-1">
       {(!isHidden || !hideConfig.deadlineAlerts) && showDeadlineAlerts && <DeadlineAlerts />}
-      {/* Quote Popup */}
-      {(!isHidden || !hideConfig.quote) && showQuote && <QuotePopup />}
+      {!isPanicHidden && (
+        <>
+          {(!isHidden || !hideConfig.deadlineAlerts) && showDeadlineAlerts && <DeadlineAlerts />}
+          {/* Quote Popup */}
+          {(!isHidden || !hideConfig.quote) && showQuote && <QuotePopup />}
 
-      {/* Stats Modal */}
-      {(!isHidden || !hideConfig.stats) && showStats && <StatsModal />}
+          {/* Stats Modal */}
+          {(!isHidden || !hideConfig.stats) && showStats && <StatsModal />}
 
-      {/* Health Modal */}
-      {(!isHidden || !hideConfig.health) && showHealth && <HealthModal />}
+          {/* Health Modal */}
+          {(!isHidden || !hideConfig.health) && showHealth && <HealthModal />}
 
-      {/* Quick Notes */}
-      {(!isHidden || !hideConfig.notes) && showNotes && <NotesManager />}
+          {/* Quick Notes */}
+          {(!isHidden || !hideConfig.notes) && showNotes && <NotesManager />}
 
-      {/* Roadmap & Plans */}
-      {(!isHidden || !hideConfig.plans) && showPlans && <PlansManager />}
+          {/* Roadmap & Plans */}
+          {(!isHidden || !hideConfig.plans) && showPlans && <PlansManager />}
 
-      {/* Top Left: Background Switcher */}
-      {(!isHidden || !hideConfig.bgSwitcher) && showBgSwitcher && (
-      <div className="absolute top-6 left-4 z-50">
-        <button
-          onClick={cycleBackground}
-          className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:bg-white/20 hover:shadow-2xl"
-          title="Switch Background"
-        >
-          <svg className="w-5 h-5 transition-transform duration-300 group-hover:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <polyline points="21 15 16 10 5 21" />
-          </svg>
-        </button>
-      </div>
-      )}
-
-      {/* Top Leftish: Target Countdowns */}
-      {(!isHidden || !hideConfig.countdowns) && showCountdowns && (
-        <div className="absolute top-32 right-[320px] z-50">
-          <DraggableWidget id="countdowns">
-            <div className="flex flex-col gap-4 items-center">
-              {countdowns.length > 0 && (
-                <Countdown key={countdowns[0].id} id={countdowns[0].id} />
-              )}
-
-              {isCountdownsExpanded && countdowns.slice(1).map(c => (
-                <Countdown key={c.id} id={c.id} />
-              ))}
-
-              <button
-                onClick={() => setIsCountdownsExpanded(!isCountdownsExpanded)}
-                className="flex items-center justify-center p-1.5 text-white/40 hover:text-white bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full transition-all border border-white/10"
-                title={isCountdownsExpanded ? "Hide extra targets" : "Show all targets"}
-              >
-                {isCountdownsExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </button>
-            </div>
-          </DraggableWidget>
-        </div>
-      )}
-
-      {/* Top Right: Mini Calendar */}
-      {(!isHidden || !hideConfig.calendar) && showCalendar && (
-        <div className="absolute top-4 right-4 z-50">
-          <MiniCalendar />
-        </div>
-      )}
-
-      {/* Dashboard components will be positioned absolutely within this container */}
-
-      {/* BigClock */}
-      {(!isHidden || !hideConfig.clock) && showClock && (
-      <div className={`absolute z-[999] pointer-events-none transition-all duration-500 ${currentBgType === 'image' ? 'inset-0 flex items-start mt-40 justify-center' : 'top-40 left-10'}`}>
-        <DraggableClock>
-          <BigClock />
-        </DraggableClock>
-      </div>
-      )}
-
-      {/* Bottom Center (Above Dock): Timetable */}
-      {(!isHidden || !hideConfig.timetable) && showTimetable && (
-      <div className="absolute bottom-40 left-1/2 -translate-x-1/2 z-[50] flex flex-col items-center">
-        {isTimetableOpen ? (
-          <div className="flex flex-col items-center gap-2">
-            <Timetable />
+          {/* Top Left: Background Switcher */}
+          {(!isHidden || !hideConfig.bgSwitcher) && showBgSwitcher && (
+          <div className="absolute top-6 left-4 z-50">
             <button
-              onClick={() => setIsTimetableOpen(false)}
-              className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-2 py-2 text-white/60 hover:text-white hover:bg-black/60 transition-colors flex items-center gap-2 shadow-xl"
+              onClick={cycleBackground}
+              className="group flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:bg-white/20 hover:shadow-2xl"
+              title="Switch Background"
             >
-              <ChevronDown size={16} />
+              <svg className="w-5 h-5 transition-transform duration-300 group-hover:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
             </button>
           </div>
-        ) : (
-          <button
-            onClick={() => setIsTimetableOpen(true)}
-            className="bg-black/20 backdrop-blur-md border border-white/10 rounded-full px-2 py-2 text-white/80 hover:text-white hover:bg-black/40 transition-colors flex items-center gap-2 shadow-xl hover:scale-105 pointer-events-auto"
-          >
-            <CalendarDays size={18} className="text-purple-400" />
-          </button>
-        )}
-      </div>
-      )}
+          )}
 
-      {/* Bottom Center: Dock */}
-      {(!isHidden || !hideConfig.dock) && showDock && (
-      <div className="absolute bottom-18 left-1/2 -translate-x-1/2 z-50">
-        <Dock onOpenNotes={() => console.log('Open Notes clicked')} />
-      </div>
-      )}
+          {/* Top Leftish: Target Countdowns */}
+          {(!isHidden || !hideConfig.countdowns) && showCountdowns && (
+            <div className="absolute top-32 right-[320px] z-50">
+              <DraggableWidget id="countdowns">
+                <div className="flex flex-col gap-4 items-center">
+                  {countdowns.length > 0 && (
+                    <Countdown key={countdowns[0].id} id={countdowns[0].id} />
+                  )}
 
-      {/* Bottom Left: Health Rings */}
-      {(!isHidden || !hideConfig.health) && showHealth && (
-        <div className="absolute bottom-12 left-12 z-50">
-          <HealthRings />
-        </div>
-      )}
+                  {isCountdownsExpanded && countdowns.slice(1).map(c => (
+                    <Countdown key={c.id} id={c.id} />
+                  ))}
 
-      {/* Bottom Right Container */}
-      <div className="absolute right-2 z-50 flex items-end transition-all duration-300 pointer-events-none" style={{ bottom: `${rightWidgetsOffset}px` }}>
-        {/* TaskManager & Timer Group */}
-        <div className="flex flex-col items-end gap-2 pointer-events-none mr-[10px]">
-          {(!isHidden || !hideConfig.tasks) && showTasks && <TaskManager />}
-          <div className="flex flex-row items-start gap-3 pointer-events-none">
-            {(!isHidden || !hideConfig.stopwatch) && showStopwatch && <Stopwatch />}
-            {(!isHidden || !hideConfig.timer) && showTimer && <Timer />}
+                  <button
+                    onClick={() => setIsCountdownsExpanded(!isCountdownsExpanded)}
+                    className="flex items-center justify-center p-1.5 text-white/40 hover:text-white bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full transition-all border border-white/10"
+                    title={isCountdownsExpanded ? "Hide extra targets" : "Show all targets"}
+                  >
+                    {isCountdownsExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  </button>
+                </div>
+              </DraggableWidget>
+            </div>
+          )}
+
+          {/* Top Right: Mini Calendar */}
+          {(!isHidden || !hideConfig.calendar) && showCalendar && (
+            <div className="absolute top-4 right-4 z-50">
+              <MiniCalendar />
+            </div>
+          )}
+
+          {/* BigClock */}
+          {(!isHidden || !hideConfig.clock) && showClock && (
+          <div className={`absolute z-[999] pointer-events-none transition-all duration-500 ${currentBgType === 'image' ? 'inset-0 flex items-start mt-40 justify-center' : 'top-40 left-10'}`}>
+            <DraggableClock>
+              <BigClock />
+            </DraggableClock>
           </div>
-        </div>
-        
-        {/* Vertical Icons Toolbar */}
-        <div className="pointer-events-none">
-          <RightToolbar />
-        </div>
-      </div>
+          )}
+
+          {/* Bottom Center (Above Dock): Timetable */}
+          {(!isHidden || !hideConfig.timetable) && showTimetable && (
+          <div className="absolute bottom-40 left-1/2 -translate-x-1/2 z-[50] flex flex-col items-center">
+            {isTimetableOpen ? (
+              <div className="flex flex-col items-center gap-2">
+                <Timetable />
+                <button
+                  onClick={() => setIsTimetableOpen(false)}
+                  className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-2 py-2 text-white/60 hover:text-white hover:bg-black/60 transition-colors flex items-center gap-2 shadow-xl"
+                >
+                  <ChevronDown size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsTimetableOpen(true)}
+                className="bg-black/20 backdrop-blur-md border border-white/10 rounded-full px-2 py-2 text-white/80 hover:text-white hover:bg-black/40 transition-colors flex items-center gap-2 shadow-xl hover:scale-105 pointer-events-auto"
+              >
+                <CalendarDays size={18} className="text-purple-400" />
+              </button>
+            )}
+          </div>
+          )}
+
+          {/* Bottom Center: Dock */}
+          {(!isHidden || !hideConfig.dock) && showDock && (
+          <div className="absolute bottom-18 left-1/2 -translate-x-1/2 z-50">
+            <Dock onOpenNotes={() => console.log('Open Notes clicked')} />
+          </div>
+          )}
+
+          {/* Bottom Left: Health Rings */}
+          {(!isHidden || !hideConfig.health) && showHealth && (
+            <div className="absolute bottom-12 left-12 z-50">
+              <HealthRings />
+            </div>
+          )}
+
+          {/* Bottom Right Container */}
+          <div className="absolute right-2 z-50 flex items-end transition-all duration-300 pointer-events-none" style={{ bottom: `${rightWidgetsOffset}px` }}>
+            {/* TaskManager & Timer Group */}
+            <div className="flex flex-col items-end gap-2 pointer-events-none mr-[10px]">
+              {(!isHidden || !hideConfig.tasks) && showTasks && <TaskManager />}
+              <div className="flex flex-row items-start gap-3 pointer-events-none">
+                {(!isHidden || !hideConfig.stopwatch) && showStopwatch && <Stopwatch />}
+                {(!isHidden || !hideConfig.timer) && showTimer && <Timer />}
+              </div>
+            </div>
+            
+            {/* Vertical Icons Toolbar */}
+            <div className="pointer-events-none">
+              <RightToolbar />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Settings Modal */}
       <SettingsModal />

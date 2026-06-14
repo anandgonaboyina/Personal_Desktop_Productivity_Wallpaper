@@ -9,6 +9,7 @@ export default function MiniCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showAllDeadlines, setShowAllDeadlines] = useState(false);
+  const [editingDeadlineId, setEditingDeadlineId] = useState<string | null>(null);
 
   const { deadlines, addDeadline, updateDeadline, deleteDeadline, deleteAllDeadlinesForDay, deleteAllDeadlines } = useDashboardStore();
 
@@ -120,15 +121,34 @@ export default function MiniCalendar() {
             {dayDeadlines.map(d => (
               <div key={d.id} className="flex gap-2 items-center bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 focus-within:border-blue-500/30 transition-all group shadow-sm">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_red] py-1 shrink-0" />
-                <input
-                  type="text"
-                  value={d.text}
-                  onChange={e => updateDeadline(d.id, e.target.value)}
-                  onBlur={() => { if (!d.text.trim()) deleteDeadline(d.id); }}
-                  className="flex-1 bg-transparent outline-none text-white/90 text-sm h-8 leading-tight placeholder:text-white/30 border-b border-transparent focus:border-white/20 transition-colors"
-                  placeholder="Enter deadline here..."
-                  autoFocus
-                />
+                {editingDeadlineId === d.id || !d.text.trim() ? (
+                  <input
+                    type="text"
+                    value={d.text}
+                    onChange={e => updateDeadline(d.id, e.target.value)}
+                    onBlur={() => { 
+                      if (!d.text.trim()) deleteDeadline(d.id); 
+                      setEditingDeadlineId(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        if (!d.text.trim()) deleteDeadline(d.id);
+                        setEditingDeadlineId(null);
+                      }
+                    }}
+                    className="flex-1 bg-transparent outline-none text-white/90 text-sm h-8 leading-tight placeholder:text-white/30 border-b border-white/20 transition-colors"
+                    placeholder="Enter deadline here..."
+                    autoFocus
+                  />
+                ) : (
+                  <div 
+                    onDoubleClick={() => setEditingDeadlineId(d.id)}
+                    title="Double click to edit"
+                    className="flex-1 text-white/90 text-sm leading-tight cursor-grab truncate py-1.5"
+                  >
+                    {d.text}
+                  </div>
+                )}
                 <button
                   onClick={() => {
                     if (window.confirm('Are you sure you want to delete this deadline?')) {
