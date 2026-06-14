@@ -364,7 +364,7 @@ start wscript "start-server.vbs"
 echo Server is starting up in the background!
 echo.
 echo ========================================================
-echo                 CRITICAL NEXT STEPS!
+echo     CRITICAL STEPS TO MAKE IT WORK - PAY ATTENTION!
 echo ========================================================
 echo Please read the following instructions carefully from here.
 echo.
