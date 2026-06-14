@@ -370,6 +370,15 @@ export default function SettingsModal() {
 
       <div className="relative w-full max-w-4xl max-h-[95vh] flex flex-col bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden text-white animate-in zoom-in-95 duration-200">
 
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes continuous-glass-sweep {
+            0% { left: -100%; }
+            100% { left: 200%; }
+          }
+          .glass-sweep-anim {
+            animation: continuous-glass-sweep 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
+          }
+        ` }} />
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10 bg-black/20">
           <h2 className="text-2xl font-bold tracking-wide flex items-center gap-3">
@@ -437,19 +446,30 @@ export default function SettingsModal() {
               Dashboard Update
             </button>
             <button
-              onClick={() => setSettingsActiveTab('about')}
-              className={`flex flex-col items-center justify-center gap-2 px-4 py-6 rounded-2xl transition-all font-medium mt-auto w-full ${settingsActiveTab === 'about' ? 'bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-white border border-blue-500/30 shadow-lg' : 'bg-black/20 text-white/60 hover:bg-white/5 hover:text-white border border-white/5'}`}
+              onClick={() => setSettingsActiveTab('credits')}
+              className={`relative overflow-hidden group flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium mt-auto w-full ${settingsActiveTab === 'credits' ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.2)]' : 'bg-black/20 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] backdrop-blur-md border border-white/5'}`}
             >
+              <div className="absolute top-0 bottom-0 w-[150%] bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none glass-sweep-anim" style={{ left: '-100%' }} />
+              <BadgeCheck size={20} className={`relative z-10 ${settingsActiveTab === 'credits' ? 'text-pink-400' : ''}`} />
+              <div className="flex flex-col items-start text-left relative z-10">
+                <span className="text-sm font-semibold tracking-wide leading-tight">Credits & Supporters</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setSettingsActiveTab('about')}
+              className={`relative overflow-hidden group flex flex-col items-center justify-center gap-2 px-4 py-6 rounded-2xl transition-all font-medium w-full ${settingsActiveTab === 'about' ? 'bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-white border border-blue-500/30 shadow-lg' : 'bg-black/20 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] backdrop-blur-md border border-white/5'}`}
+            >
+              <div className="absolute top-0 bottom-0 w-[150%] bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none glass-sweep-anim" style={{ left: '-100%' }} />
               <img
                 src="/branding/author.jpeg"
                 alt="Developer"
-                className="w-14 h-14 rounded-full object-cover shadow-lg border-2 border-white/20"
+                className="w-14 h-14 rounded-full object-cover shadow-lg border-2 border-white/20 relative z-10"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement?.insertAdjacentHTML('afterbegin', '<svg class="w-8 h-8" ... />'); // Fallback to User icon
+                  e.currentTarget.parentElement?.insertAdjacentHTML('afterbegin', '<svg class="w-8 h-8 relative z-10" ... />'); // Fallback to User icon
                 }}
               />
-              <div className="flex flex-col items-center text-center">
+              <div className="flex flex-col items-center text-center relative z-10">
                 <span className="text-sm font-semibold tracking-wide leading-tight">Support & Connect</span>
                 <span className="text-[10px] text-blue-300 font-medium uppercase mt-1 tracking-wider">Gonaboyina Anand kumar</span>
               </div>
@@ -1519,6 +1539,104 @@ export default function SettingsModal() {
                           <p className="text-sm text-blue-300 font-mono select-all whitespace-nowrap">{upiId}</p>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {settingsActiveTab === 'credits' && (
+                <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+                  <div>
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <BadgeCheck className="text-pink-400" size={24} />
+                      Credits & Supporters
+                    </h3>
+                    <p className="text-white/50 text-sm mt-1">Thanks for always supporting me</p>
+                  </div>
+
+                  {/* Personal Note Section */}
+                  <div className="bg-pink-500/10 border border-pink-500/20 rounded-2xl p-5 flex flex-col gap-3">
+                    <p className="text-sm text-pink-300 font-medium leading-relaxed">
+                      I originally started building this out of the pure frustration and regret of wasting so many days unproductively. I just needed something to finally help me stay on track.
+                    </p>
+                    <div className="h-px w-full bg-pink-500/20 my-1" />
+                    <p className="text-sm text-pink-200/80 leading-relaxed italic">
+                      "But honestly, this dashboard wouldn't be what it is today without the help of my friends. A big thank you to everyone who believed in this project, tested it for me, and gave me straight-up honest feedback. Thanks for always having my back."
+                    </p>
+                  </div>
+
+                  {/* Supporters */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Sathish Kumar */}
+                    <div className="bg-black/20 border border-white/5 rounded-2xl p-5 flex flex-col gap-4 hover:bg-white/5 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 shrink-0 rounded-full overflow-hidden border-2 border-white/10 shadow-lg">
+                          <img
+                            src="/sathish.jpeg"
+                            alt="Sathish Kumar"
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        </div>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <h4 className="text-lg font-bold text-white truncate leading-tight">Sathish Kumar</h4>
+                          <p className="text-[10px] text-white/60 font-semibold tracking-wider uppercase mt-0.5 truncate">
+                            <span className="text-blue-300">EEE</span> • NIT Patna
+                          </p>
+                          <a
+                            href="https://www.linkedin.com/in/kanuri-sathish-kumar-289756330/"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 bg-[#0077b5]/20 hover:bg-[#0077b5]/40 text-blue-300 border border-[#0077b5]/40 rounded-lg px-2.5 py-1 transition-all hover:scale-105 w-fit mt-1.5"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                              <rect x="2" y="9" width="4" height="12"></rect>
+                              <circle cx="4" cy="4" r="2"></circle>
+                            </svg>
+                            <span className="text-[10px] font-bold tracking-wider uppercase">Connect</span>
+                          </a>
+                        </div>
+                      </div>
+                      <p className="text-sm text-white/60 leading-relaxed">
+                        Sathish spent countless hours testing the dashboard to identify bugs and usability issues. By putting himself in the shoes of an everyday user, he provided invaluable suggestions that inspired many of the automated features you see today. His dedication to refining the user experience has been instrumental in shaping this project.
+                      </p>
+                    </div>
+
+                    {/* Jyothir Ganesh */}
+                    <div className="bg-black/20 border border-white/5 rounded-2xl p-5 flex flex-col gap-4 hover:bg-white/5 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 shrink-0 rounded-full overflow-hidden border-2 border-white/10 shadow-lg">
+                          <img
+                            src="/jyothir.png"
+                            alt="Jyothir Ganesh"
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        </div>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <h4 className="text-lg font-bold text-white truncate leading-tight">Jyothir Ganesh</h4>
+                          <p className="text-[10px] text-white/60 font-semibold tracking-wider uppercase mt-0.5 truncate">
+                            <span className="text-blue-300">ECE</span> • Vishnu Institute of Technology, Bhimavaram
+                          </p>
+                          <a
+                            href="https://www.linkedin.com/in/jyothirganesh-kanuboyina/"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 bg-[#0077b5]/20 hover:bg-[#0077b5]/40 text-blue-300 border border-[#0077b5]/40 rounded-lg px-2.5 py-1 transition-all hover:scale-105 w-fit mt-1.5"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                              <rect x="2" y="9" width="4" height="12"></rect>
+                              <circle cx="4" cy="4" r="2"></circle>
+                            </svg>
+                            <span className="text-[10px] font-bold tracking-wider uppercase">Connect</span>
+                          </a>
+                        </div>
+                      </div>
+                      <p className="text-sm text-white/60 leading-relaxed">
+                        More than just a close friend since our school days, Jyothir has always been my strongest pillar of support—and occasionally my biggest competitor! He never hesitates to speak the truth and give me grounded, factual advice exactly when I need it most. His unwavering encouragement keeps me pushing forward.
+                      </p>
                     </div>
                   </div>
                 </div>

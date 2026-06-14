@@ -76,9 +76,9 @@ interface DashboardState {
   isStatsOpen: boolean;
   toggleStats: () => void;
   isSettingsOpen: boolean;
-  settingsActiveTab: 'wallpapers' | 'preferences' | 'profiles' | 'data' | 'about' | 'update' | 'focus' | 'sound';
+  settingsActiveTab: 'wallpapers' | 'preferences' | 'profiles' | 'data' | 'about' | 'update' | 'focus' | 'sound' | 'credits';
   toggleSettings: () => void;
-  setSettingsActiveTab: (tab: 'wallpapers' | 'preferences' | 'profiles' | 'data' | 'about' | 'update' | 'focus' | 'sound') => void;
+  setSettingsActiveTab: (tab: 'wallpapers' | 'preferences' | 'profiles' | 'data' | 'about' | 'update' | 'focus' | 'sound' | 'credits') => void;
   timerTrigger: { mins: number; ts: number; taskId?: string; taskTitle?: string } | null;
   triggerTimer: (mins: number, taskId?: string, taskTitle?: string) => void;
 

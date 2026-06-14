@@ -88,3 +88,10 @@ body {
   background-color: rgba(255,255,255,0.15);
 }
 
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+.animate-shimmer-sweep {
+  animation: shimmer-sweep 3s infinite linear;
+}
